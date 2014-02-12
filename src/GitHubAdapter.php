@@ -20,6 +20,10 @@ use Github\ResultPager;
  */
 class GitHubAdapter extends AbstractAdapter
 {
+    /**
+     * @var string
+     */
+    protected $name = 'github';
 
     /**
      * @var Client
