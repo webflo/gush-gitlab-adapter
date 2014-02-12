@@ -1,4 +1,4 @@
-gush-adapter
+gush-github-adapter
 ============
 
-Abstract Adapter and Adapter Interfaces for Gush
+GitHub adapter for Gush
