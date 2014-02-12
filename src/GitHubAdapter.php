@@ -18,7 +18,7 @@ use Github\ResultPager;
 /**
  * @author  Aaron Scherer
  */
-class GitHubAdapter extends AbstractAdapter
+class GitHubAdapter extends BaseAdapter
 {
     /**
      * @var string
