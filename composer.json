@@ -2,7 +2,7 @@
     "name": "aequasi/gush-github-adapter",
     "description": "GitHub adapter for Gush",
     "require": {
-        "cordoval/gush": ">=1.3.6"
+        "cordoval/gush": "*"
     },
     "license": "MIT",
     "authors": [
