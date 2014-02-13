@@ -14,6 +14,8 @@ namespace Gush\Adapter;
 use Github\Client;
 use Github\HttpClient\CachedHttpClient;
 use Github\ResultPager;
+use Symfony\Component\Console\Helper\DialogHelper;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @author  Aaron Scherer
@@ -51,9 +53,29 @@ class GitHubAdapter extends BaseAdapter
             'cache_dir' => $this->configuration->get('cache-dir')
         ]);
 
+        $config = $this->configuration->get('github');
         $client = new Client($cachedClient);
+        $client->setOption('base_url', $config['base_url']);
 
         return $client;
+    }
+
+    public function doConfigure(OutputInterface $output, DialogHelper $dialog)
+    {
+        $config = array();
+
+        $output->writeln('<comment>Enter your GitHub URL (supports Enterprise): </comment>');
+        $config['base_url'] = $dialog->askAndValidate(
+            $output,
+            'Url: ',
+            function ($url) {
+                return filter_var($url, FILTER_VALIDATE_URL);
+            },
+            false,
+            'https://api.github.com/'
+        );
+
+        return $config;
     }
 
     /**
