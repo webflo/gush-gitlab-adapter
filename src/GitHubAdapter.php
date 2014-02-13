@@ -25,13 +25,21 @@ class GitHubAdapter extends BaseAdapter
     /**
      * @var string
      */
-    protected $name = 'github';
+    protected static $name = 'github';
 
     /**
-     * @var Client
+     * @var string|null
+     */
+    protected $url;
+
+    /**
+     * @var Client|null
      */
     private $client;
 
+    /**
+     * @var string
+     */
     protected $authenticationType = Client::AUTH_HTTP_PASSWORD;
 
     /**
@@ -56,11 +64,12 @@ class GitHubAdapter extends BaseAdapter
         $config = $this->configuration->get('github');
         $client = new Client($cachedClient);
         $client->setOption('base_url', $config['base_url']);
+        $this->url = rtrim($config['base_url'], '/');
 
         return $client;
     }
 
-    public function doConfigure(OutputInterface $output, DialogHelper $dialog)
+    public static function doConfiguration(OutputInterface $output, DialogHelper $dialog)
     {
         $config = [];
 
@@ -83,7 +92,7 @@ class GitHubAdapter extends BaseAdapter
      */
     public function authenticate()
     {
-        $credentials = $this->configuration->get('credentials');
+        $credentials = $this->configuration->get('authentication');
 
         if (Client::AUTH_HTTP_PASSWORD === $credentials['http-auth-type']) {
             $this->client->authenticate(
@@ -153,6 +162,14 @@ class GitHubAdapter extends BaseAdapter
             $this->getRepository(),
             $id
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIssueUrl($id)
+    {
+        return sprintf('https://%s/%s/%s/issue/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
     }
 
     /**
@@ -326,7 +343,15 @@ class GitHubAdapter extends BaseAdapter
     }
 
     /**
-     * @param integer $id
+     * {@inheritdoc}
+     */
+    public function getPullRequestUrl($id)
+    {
+        return sprintf('https://%s/%s/%s/pull/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
+    }
+
+    /**
+     * @param int $id
      *
      * @return mixed
      */
@@ -430,7 +455,7 @@ class GitHubAdapter extends BaseAdapter
      *
      * @return mixed
      */
-    public function createReleaseAssest($id, $name, $contentType, $content)
+    public function createReleaseAssets($id, $name, $contentType, $content)
     {
         $api =
             $this->client->api('repo')
