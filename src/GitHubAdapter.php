@@ -15,7 +15,7 @@ use Github\Client;
 use Github\HttpClient\CachedHttpClient;
 use Github\ResultPager;
 use Symfony\Component\Console\Helper\DialogHelper;
-use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\fOutput\OutputInterface;
 
 /**
  * @author  Aaron Scherer
@@ -62,7 +62,7 @@ class GitHubAdapter extends BaseAdapter
 
     public function doConfigure(OutputInterface $output, DialogHelper $dialog)
     {
-        $config = array();
+        $config = [];
 
         $output->writeln('<comment>Enter your GitHub URL (supports Enterprise): </comment>');
         $config['base_url'] = $dialog->askAndValidate(
@@ -79,7 +79,7 @@ class GitHubAdapter extends BaseAdapter
     }
 
     /**
-     * @return Bool
+     * @return Boolean
      */
     public function authenticate()
     {
@@ -108,21 +108,17 @@ class GitHubAdapter extends BaseAdapter
     /**
      * Returns true if the adapter is authenticated, false otherwise
      *
-     * @return Bool
+     * @return Boolean
      */
     public function isAuthenticated()
     {
         if (Client::AUTH_HTTP_PASSWORD === $this->authenticationType) {
             return is_array(
-                $this->client->api('authorizations')
-                    ->all()
+                $this->client->api('authorizations')->all()
             );
         }
 
-        return is_array(
-            $this->client->api('me')
-                ->show()
-        );
+        return is_array($this->client->api('me')->show());
     }
 
     /**
@@ -132,24 +128,26 @@ class GitHubAdapter extends BaseAdapter
      *
      * @return mixed
      */
-    public function openIssue($subject, $body, array $options = array())
+    public function openIssue($subject, $body, array $options = [])
     {
         $api = $this->client->api('issue');
+
         return $api->create(
             $this->getUsername(),
             $this->getRepository(),
-            array_merge($options, array('title' => $subject, 'body' => $body))
+            array_merge($options, ['title' => $subject, 'body' => $body])
         );
     }
 
     /**
-     * @param int $id
+     * @param integer $id
      *
      * @return mixed
      */
     public function getIssue($id)
     {
         $api = $this->client->api('issue');
+
         return $api->show(
             $this->getUsername(),
             $this->getRepository(),
@@ -162,29 +160,30 @@ class GitHubAdapter extends BaseAdapter
      *
      * @return mixed
      */
-    public function getIssues(array $parameters = array())
+    public function getIssues(array $parameters = [])
     {
         $pager = new ResultPager($this->client);
         return $pager->fetchAll(
             $this->client->api('issue'),
             'all',
-            array(
+            [
                 $this->getUsername(),
                 $this->getRepository(),
                 $parameters
-            )
+            ]
         );
     }
 
     /**
-     * @param int   $id
-     * @param array $parameters
+     * @param integer $id
+     * @param array   $parameters
      *
      * @return mixed
      */
     public function updateIssue($id, array $parameters)
     {
         $api = $this->client->api('issue');
+
         return $api->update(
             $this->getUsername(),
             $this->getRepository(),
@@ -194,31 +193,34 @@ class GitHubAdapter extends BaseAdapter
     }
 
     /**
-     * @param int $id
+     * @param integer $id
      *
      * @return mixed
      */
     public function closeIssue($id)
     {
-        return $this->updateIssue($id, array('state' => 'closed'));
+        return $this->updateIssue($id, ['state' => 'closed']);
     }
 
     /**
-     * @param int    $id
-     * @param string $message
+     * @param integer $id
+     * @param string  $message
      *
      * @return mixed
      */
     public function createComment($id, $message)
     {
-        $api =
-            $this->client->api('issue')
-                ->comments();
+        $api = $this
+            ->client
+            ->api('issue')
+            ->comments()
+        ;
+
         return $api->create(
             $this->getUsername(),
             $this->getRepository(),
             $id,
-            array('body' => $message)
+            ['body' => $message]
         );
     }
 
@@ -230,15 +232,15 @@ class GitHubAdapter extends BaseAdapter
     public function getComments($id)
     {
         $pager = new ResultPager($this->client);
+
         return $pager->fetchAll(
-            $this->client->api('issue')
-                ->comments(),
+            $this->client->api('issue')->comments(),
             'all',
-            array(
+            [
                 $this->getUsername(),
                 $this->getRepository(),
-                $id
-            )
+                $id,
+            ]
         );
     }
 
@@ -247,9 +249,12 @@ class GitHubAdapter extends BaseAdapter
      */
     public function getLabels()
     {
-        $api =
-            $this->client->api('issue')
-                ->labels();
+        $api = $this
+            ->client
+            ->api('issue')
+            ->labels()
+        ;
+
         return $api->all(
             $this->getUsername(),
             $this->getRepository()
@@ -261,11 +266,14 @@ class GitHubAdapter extends BaseAdapter
      *
      * @return mixed
      */
-    public function getMilestones(array $parameters = array())
+    public function getMilestones(array $parameters = [])
     {
-        $api =
-            $this->client->api('issue')
-                ->milestones();
+        $api = $this
+            ->client
+            ->api('issue')
+            ->milestones()
+        ;
+
         return $api->all(
             $this->getUsername(),
             $this->getRepository(),
@@ -282,32 +290,34 @@ class GitHubAdapter extends BaseAdapter
      *
      * @return mixed
      */
-    public function openPullRequest($base, $head, $subject, $body, array $parameters = array())
+    public function openPullRequest($base, $head, $subject, $body, array $parameters = [])
     {
         $api = $this->client->api('pull_request');
+
         return $api->create(
             $this->getUsername(),
             $this->getRepository(),
             array_merge(
                 $parameters,
-                array(
+                [
                     'base'  => $base,
                     'head'  => $head,
                     'title' => $subject,
                     'body'  => $body,
-                )
+                ]
             )
         );
     }
 
     /**
-     * @param int $id
+     * @param integer $id
      *
      * @return mixed
      */
     public function getPullRequest($id)
     {
         $api = $this->client->api('pull_request');
+
         return $api->show(
             $this->getUsername(),
             $this->getRepository(),
@@ -316,13 +326,14 @@ class GitHubAdapter extends BaseAdapter
     }
 
     /**
-     * @param int $id
+     * @param integer $id
      *
      * @return mixed
      */
     public function getPullRequestCommits($id)
     {
         $api = $this->client->api('pull_request');
+
         return $api->commits(
             $this->getUsername(),
             $this->getRepository(),
@@ -338,7 +349,11 @@ class GitHubAdapter extends BaseAdapter
      */
     public function mergePullRequest($id, $message)
     {
-        $api = $this->client->api('pull_request');
+        $api = $this
+            ->client
+            ->api('pull_request')
+        ;
+
         return $api->merge(
             $this->getUsername(),
             $this->getRepository(),
@@ -353,19 +368,22 @@ class GitHubAdapter extends BaseAdapter
      *
      * @return mixed
      */
-    public function createRelease($name, array $parameters = array())
+    public function createRelease($name, array $parameters = [])
     {
-        $api =
-            $this->client->api('repo')
-                ->releases();
+        $api = $this
+            ->client
+            ->api('repo')
+            ->releases()
+        ;
+
         return $api->create(
             $this->getUsername(),
             $this->getRepository(),
             array_merge(
                 $parameters,
-                array(
+                [
                     'tag_name' => $name
-                )
+                ]
             )
         );
     }
@@ -375,9 +393,12 @@ class GitHubAdapter extends BaseAdapter
      */
     public function getReleases()
     {
-        $api =
-            $this->client->api('repo')
-                ->releases();
+        $api = $this
+            ->client
+            ->api('repo')
+            ->releases()
+        ;
+
         return $api->all(
             $this->getUsername(),
             $this->getRepository()
@@ -402,10 +423,10 @@ class GitHubAdapter extends BaseAdapter
     }
 
     /**
-     * @param int    $id
-     * @param string $name
-     * @param string $contentType
-     * @param string $content
+     * @param integer $id
+     * @param string  $name
+     * @param string  $contentType
+     * @param string  $content
      *
      * @return mixed
      */
@@ -415,6 +436,7 @@ class GitHubAdapter extends BaseAdapter
             $this->client->api('repo')
                 ->releases()
                 ->assets();
+
         return $api->create(
             $this->getUsername(),
             $this->getRepository(),
