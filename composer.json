@@ -1,17 +1,20 @@
 {
-    "name": "aequasi/gush-github-adapter",
+    "name": "gushphp/gush-github-adapter",
     "description": "GitHub adapter for Gush",
-    "require": {
-        "cordoval/gush": "*"
-    },
     "license": "MIT",
     "authors": [
         {
             "name": "Aaron Scherer",
             "email": "aequasi@gmail.com"
+        },
+        {
+            "name": "Luis Cordova",
+            "email": "cordoval@gmail.com"
         }
     ],
-    "minimum-stability": "stable",
+    "provide": {
+        "gushphp/gush-adapter-implementation": "1.0.0"
+    },
     "autoload": {
         "psr-4": {
             "Gush\\Adapter\\": "src/"
