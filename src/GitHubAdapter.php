@@ -15,7 +15,7 @@ use Github\Client;
 use Github\HttpClient\CachedHttpClient;
 use Github\ResultPager;
 use Symfony\Component\Console\Helper\DialogHelper;
-use Symfony\Component\Console\fOutput\OutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @author  Aaron Scherer
