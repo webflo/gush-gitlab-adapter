@@ -43,6 +43,14 @@ class GitHubAdapter extends BaseAdapter
     protected $authenticationType = Client::AUTH_HTTP_PASSWORD;
 
     /**
+     * {@inheritdoc}
+     */
+    public static function getName()
+    {
+        return self::$name;
+    }
+
+    /**
      * Initializes the Adapter
      *
      * @return void
