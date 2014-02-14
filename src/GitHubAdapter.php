@@ -131,6 +131,14 @@ class GitHubAdapter extends BaseAdapter
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function getTokenGenerationUrl()
+    {
+        return sprintf('%s/settings/applications', $this->url);
+    }
+
+    /**
      * @param string $subject
      * @param string $body
      * @param array  $options
@@ -169,7 +177,7 @@ class GitHubAdapter extends BaseAdapter
      */
     public function getIssueUrl($id)
     {
-        return sprintf('https://%s/%s/%s/issue/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
+        return sprintf('%s/%s/%s/issue/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
     }
 
     /**
@@ -347,7 +355,7 @@ class GitHubAdapter extends BaseAdapter
      */
     public function getPullRequestUrl($id)
     {
-        return sprintf('https://%s/%s/%s/pull/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
+        return sprintf('%s/%s/%s/pull/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
     }
 
     /**
