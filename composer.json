@@ -1,6 +1,9 @@
 {
     "name": "gushphp/gush-github-adapter",
     "description": "GitHub adapter for Gush",
+    "require": {
+        "gushphp/gush": "dev-master"
+    },
     "license": "MIT",
     "authors": [
         {
