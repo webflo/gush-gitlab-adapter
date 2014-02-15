@@ -22,10 +22,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class GitHubAdapter extends BaseAdapter
 {
-    /**
-     * @var string
-     */
-    protected static $name = 'github';
+    const NAME = 'github';
 
     /**
      * @var string|null
@@ -41,14 +38,6 @@ class GitHubAdapter extends BaseAdapter
      * @var string
      */
     protected $authenticationType = Client::AUTH_HTTP_PASSWORD;
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function getName()
-    {
-        return self::$name;
-    }
 
     /**
      * Initializes the Adapter
