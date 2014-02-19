@@ -136,6 +136,24 @@ class GitHubAdapter extends BaseAdapter
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function createFork($org = null)
+    {
+        $api = $this->client->api('repo');
+
+        if (null === $org) {
+            $org = $this->getUsername();
+        }
+
+        return $api->forks()->create(
+            $this->getUsername(),
+            $this->getRepository(),
+            $org
+        );
+    }
+
+    /**
      * @param string $subject
      * @param string $body
      * @param array  $options
