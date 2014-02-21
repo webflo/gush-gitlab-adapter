@@ -155,7 +155,7 @@ class GitHubAdapter extends BaseAdapter
         $result = $api->forks()->create(
             $this->getUsername(),
             $this->getRepository(),
-            ['organization' => $org]
+            ['org' => $org]
         );
 
         return [
