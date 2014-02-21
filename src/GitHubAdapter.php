@@ -73,12 +73,22 @@ class GitHubAdapter extends BaseAdapter
         $output->writeln('<comment>Enter your GitHub URL (supports Enterprise): </comment>');
         $config['base_url'] = $dialog->askAndValidate(
             $output,
-            'Url: ',
+            'Api url: ',
             function ($url) {
                 return filter_var($url, FILTER_VALIDATE_URL);
             },
             false,
             'https://api.github.com/'
+        );
+
+        $config['repo_domain_url'] = $dialog->askAndValidate(
+            $output,
+            'Repo domain url: ',
+            function ($field) {
+                return $field;
+            },
+            false,
+            'github.com'
         );
 
         return $config;
@@ -133,6 +143,24 @@ class GitHubAdapter extends BaseAdapter
     public function getTokenGenerationUrl()
     {
         return sprintf('%s/settings/applications', $this->url);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createFork($org)
+    {
+        $api = $this->client->api('repo');
+
+        $result = $api->forks()->create(
+            $this->getUsername(),
+            $this->getRepository(),
+            ['org' => $org]
+        );
+
+        return [
+            'remote_url' => $result['ssh_url'],
+        ];
     }
 
     /**
