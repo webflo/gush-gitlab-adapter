@@ -54,13 +54,13 @@ class GitHubAdapter extends BaseAdapter
      */
     protected function buildGitHubClient()
     {
+        $config = $this->configuration->get('github');
         $cachedClient = new CachedHttpClient([
-            'cache_dir' => $this->configuration->get('cache-dir')
+            'cache_dir' => $this->configuration->get('cache-dir'),
+            'base_url'  => $config['base_url']
         ]);
 
-        $config = $this->configuration->get('github');
         $client = new Client($cachedClient);
-        $client->setOption('base_url', $config['base_url']);
         $this->url = rtrim($config['base_url'], '/');
 
         return $client;
