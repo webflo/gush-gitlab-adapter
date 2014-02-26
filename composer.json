@@ -1,8 +1,9 @@
 {
-    "name": "gushphp/gush-github-adapter",
-    "description": "GitHub adapter for Gush",
+    "name": "gushphp/gush-gitlab-adapter",
+    "description": "GitLab adapter for Gush",
     "require": {
-        "gushphp/gush": "*"
+        "gushphp/gush":                "*",
+        "gushphp/gush-github-adapter": "*"
     },
     "license": "MIT",
     "authors": [
@@ -20,7 +21,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Gush\\Adapter\\": "src/"
+            "Gush\\": "src/"
         }
     }
 }

@@ -1,11 +1,11 @@
-gush-github-adapter
+gush-gitlab-adapter
 ===================
 
-GitHub adapter for Gush
+GitLab adapter for Gush
 
 
 ## To Use
 
 ```sh
-gush configure --adapter=Gush\Adapter\GitHubAdapter
+gush configure --adapter=Gush\Adapter\GitLabAdapter
 ```
