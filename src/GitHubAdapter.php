@@ -30,6 +30,11 @@ class GitHubAdapter extends BaseAdapter
     protected $url;
 
     /**
+     * @var string|null
+     */
+    protected $domain;
+
+    /**
      * @var Client|null
      */
     private $client;
@@ -62,6 +67,7 @@ class GitHubAdapter extends BaseAdapter
 
         $client = new Client($cachedClient);
         $this->url = rtrim($config['base_url'], '/');
+        $this->domain = rtrim($config['repo_domain_url'], '/');
 
         return $client;
     }
@@ -202,7 +208,7 @@ class GitHubAdapter extends BaseAdapter
      */
     public function getIssueUrl($id)
     {
-        return sprintf('%s/%s/%s/issue/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
+        return sprintf('https://%s/%s/%s/issue/%d', $this->domain, $this->getUsername(), $this->getRepository(), $id);
     }
 
     /**
@@ -380,7 +386,7 @@ class GitHubAdapter extends BaseAdapter
      */
     public function getPullRequestUrl($id)
     {
-        return sprintf('%s/%s/%s/pull/%d', $this->url, $this->getUsername(), $this->getRepository(), $id);
+        return sprintf('https://%s/%s/%s/pull/%d', $this->domain, $this->getUsername(), $this->getRepository(), $id);
     }
 
     /**
