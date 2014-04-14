@@ -24,6 +24,26 @@ class GitLabAdapter extends BaseAdapter
     const NAME = 'gitlab';
 
     /**
+     * @var string|null
+     */
+    protected $url;
+
+    /**
+     * @var string|null
+     */
+    protected $domain;
+
+    /**
+     * @var Client|null
+     */
+    private $client;
+
+    /**
+     * @var string
+     */
+    protected $authenticationType = Client::AUTH_HTTP_TOKEN;
+
+    /**
      * Initializes the Adapter
      *
      * @return void
@@ -85,6 +105,8 @@ class GitLabAdapter extends BaseAdapter
 
         $this->client->authenticate($credentials['password-or-token'], Client::AUTH_HTTP_TOKEN);
 
+        $this->authenticationType = Client::AUTH_HTTP_TOKEN;
+
         return;
     }
 
@@ -93,7 +115,9 @@ class GitLabAdapter extends BaseAdapter
      */
     public function isAuthenticated()
     {
-        // TODO: Implement isAuthenticated() method.
+        $result = $this->client->api('projects')->owned();
+        ladybug_dump_die($result);
+        //return is_array($this->client->api('projects')->owned());
     }
 
     /**
