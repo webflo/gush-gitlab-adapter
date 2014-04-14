@@ -11,8 +11,7 @@
 
 namespace Gush\Adapter;
 
-use Github\Client;
-use Github\HttpClient\CachedHttpClient;
+use Gitlab\Client;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -23,8 +22,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class GitLabAdapter extends BaseAdapter
 {
     const NAME = 'gitlab';
-
-    protected $authenticationType = Client::AUTH_HTTP_TOKEN;
 
     /**
      * Initializes the Adapter
@@ -42,14 +39,10 @@ class GitLabAdapter extends BaseAdapter
     protected function buildGitLabClient()
     {
         $config = $this->configuration->get('gitlab');
-        $cachedClient = new CachedHttpClient([
-            'cache_dir' => $this->configuration->get('cache-dir'),
-            'base_url'  => $config['base_url']
-        ]);
-
-        $client = new Client($cachedClient);
         $this->url = rtrim($config['base_url'], '/');
         $this->domain = rtrim($config['repo_domain_url'], '/');
+
+        $client = new Client($this->url);
 
         return $client;
     }
@@ -79,25 +72,18 @@ class GitLabAdapter extends BaseAdapter
     }
 
     /**
+     * @throws \Exception
      * @return Boolean
      */
     public function authenticate()
     {
         $credentials = $this->configuration->get('authentication');
 
-        if (Client::AUTH_HTTP_PASSWORD === $credentials['http-auth-type']) {
+        if (0 === $credentials['http-auth-type']) {
             throw new \Exception("Authentication type for GitLab must be Token");
         }
 
-        $this->client->addListener('request.before_send', array(
-            new AuthListener($credentials['password-or-token']), 'onRequestBeforeSend'
-        ));
-
-        $this->client->authenticate(
-            $credentials['password-or-token'],
-            null,
-            Client::AUTH_HTTP_TOKEN
-        );
+        $this->client->authenticate($credentials['password-or-token'], Client::AUTH_HTTP_TOKEN);
 
         return;
     }
