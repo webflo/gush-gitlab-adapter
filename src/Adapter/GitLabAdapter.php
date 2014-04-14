@@ -13,11 +13,14 @@ namespace Gush\Adapter;
 
 use Github\Client;
 use Github\HttpClient\CachedHttpClient;
+use Symfony\Component\Console\Helper\DialogHelper;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
+ * @author Luis Cordova <cordoval@gmail.com>
  * @author Aaron Scherer <aequasi@gmail.com>
  */
-class GitLabAdapter extends GitHubAdapter
+class GitLabAdapter extends BaseAdapter
 {
     const NAME = 'gitlab';
 
@@ -97,5 +100,184 @@ class GitLabAdapter extends GitHubAdapter
         );
 
         return;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isAuthenticated()
+    {
+        // TODO: Implement isAuthenticated() method.
+    }
+
+    /**
+     * Returns the URL for generating a token.
+     * If the adapter does not support tokens, returns null
+     *
+     * @return null|string
+     */
+    public function getTokenGenerationUrl()
+    {
+        // TODO: Implement getTokenGenerationUrl() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createFork($org)
+    {
+        // TODO: Implement createFork() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function openIssue($subject, $body, array $options = [])
+    {
+        // TODO: Implement openIssue() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIssue($id)
+    {
+        // TODO: Implement getIssue() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIssueUrl($id)
+    {
+        // TODO: Implement getIssueUrl() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getIssues(array $parameters = [])
+    {
+        // TODO: Implement getIssues() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function updateIssue($id, array $parameters)
+    {
+        // TODO: Implement updateIssue() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function closeIssue($id)
+    {
+        // TODO: Implement closeIssue() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createComment($id, $message)
+    {
+        // TODO: Implement createComment() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getComments($id)
+    {
+        // TODO: Implement getComments() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLabels()
+    {
+        // TODO: Implement getLabels() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getMilestones(array $parameters = [])
+    {
+        // TODO: Implement getMilestones() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function openPullRequest($base, $head, $subject, $body, array $parameters = [])
+    {
+        // TODO: Implement openPullRequest() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPullRequest($id)
+    {
+        // TODO: Implement getPullRequest() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPullRequestUrl($id)
+    {
+        // TODO: Implement getPullRequestUrl() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPullRequestCommits($id)
+    {
+        // TODO: Implement getPullRequestCommits() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function mergePullRequest($id, $message)
+    {
+        // TODO: Implement mergePullRequest() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createRelease($name, array $parameters = [])
+    {
+        // TODO: Implement createRelease() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getReleases()
+    {
+        // TODO: Implement getReleases() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function removeRelease($id)
+    {
+        // TODO: Implement removeRelease() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function createReleaseAssets($id, $name, $contentType, $content)
+    {
+        // TODO: Implement createReleaseAssets() method.
     }
 }
