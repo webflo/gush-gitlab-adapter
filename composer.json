@@ -2,7 +2,7 @@
     "name": "gushphp/gush-gitlab-adapter",
     "description": "GitLab adapter for Gush",
     "require": {
-        "m4tthumphrey/php-gitlab-api": "dev-master@dev"
+        "m4tthumphrey/php-gitlab-api": "*"
     },
     "license": "MIT",
     "authors": [
