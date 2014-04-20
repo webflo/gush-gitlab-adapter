@@ -262,9 +262,17 @@ class GitLabAdapter extends BaseAdapter
     /**
      * {@inheritdoc}
      */
-    public function getPullRequests()
+    public function getPullRequests($state = null)
     {
         // TODO: Implement getPullRequests() method.
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPullRequestStates()
+    {
+        // TODO: Implement getPullRequestStates() method.
     }
 
     /**
