@@ -275,7 +275,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getMilestones(array $parameters = [])
     {
-        // TODO: Implement getMilestones() method.
+        return $this->client->api('milestones')->all($this->getCurrentProject()->id);
     }
 
     /**
