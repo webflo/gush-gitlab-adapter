@@ -16,6 +16,7 @@ use Gitlab\Model;
 use Gush\Exception;
 use Gush\Config;
 use Gush\Model\Issue;
+use Gush\Model\MergeRequest;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -299,7 +300,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getPullRequestUrl($id)
     {
-        // TODO: Implement getPullRequestUrl() method.
+        return sprintf('%s/%s/%s/merge_requests/%d', $this->domain, $this->getUsername(), $this->getRepository(), $id);
     }
 
     /**
@@ -323,7 +324,14 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getPullRequests($state = null)
     {
-        // TODO: Implement getPullRequests() method.
+        $mergeRequests = $this->client->api('merge_requests')->all($this->getCurrentProject()->id);
+
+        return array_map(
+            function($mr) {
+                return MergeRequest::castFrom(MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr))->toArray();
+            },
+            $mergeRequests
+        );
     }
 
     /**
