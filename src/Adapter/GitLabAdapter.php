@@ -12,7 +12,10 @@
 namespace Gush\Adapter;
 
 use Gitlab\Client;
+use Gitlab\Model;
+use Gush\Adapter\Gitlab\Exception\NotImplemented;
 use Gush\Config;
+use Gush\Model\Issue;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -57,32 +60,56 @@ class GitLabAdapter extends BaseAdapter
     protected function buildGitLabClient()
     {
         $config = $this->configuration->get('gitlab');
-        $this->url = rtrim($config['base_url'], '/') . '/';
-        $this->domain = rtrim($config['repo_domain_url'], '/') . '/';
+        $this->url = trim($config['base_url'], '/');
+        $this->domain = trim($config['repo_domain_url'], '/');
 
-        $client = new Client($this->url);
+        $client = new Client($this->domain . '/' . $this->url . '/');
 
         return $client;
+    }
+
+    /**
+     * @return Model\Project
+     */
+    protected function getCurrentProject()
+    {
+        static $currentProject;
+
+        if (null === $currentProject) {
+            foreach ($this->client->api('projects')->accessible(1, 2000) as $project) {
+                if ($project['path_with_namespace'] === $this->getUsername() . '/' . $this->getRepository()) {
+                    $currentProject = Model\Project::fromArray($this->client, $project);
+
+                    break;
+                }
+            }
+        }
+
+        if (null === $currentProject) {
+            throw new \RuntimeException(sprintf('Could not guess current %s project, tried %s/%s', static::NAME, $this->getUsername(), $this->getRepository()));
+        }
+
+        return $currentProject;
     }
 
     public static function doConfiguration(OutputInterface $output, DialogHelper $dialog)
     {
         $config = [];
 
-        $output->writeln('<comment>Enter your GitLab URL: </comment>');
-        $config['base_url'] = $dialog->askAndValidate(
+        $config['repo_domain_url'] = $dialog->askAndValidate(
             $output,
-            'Api url: ',
-            function ($url) {
-                return filter_var($url, FILTER_VALIDATE_URL);
+            'Gitlab URL (http://gitlab-host): ',
+            function ($domain) {
+                return rtrim($domain, '/');
             }
         );
 
-        $config['repo_domain_url'] = $dialog->askAndValidate(
+        $output->writeln('<comment>Enter your GitLab URL: </comment>');
+        $config['base_url'] = $dialog->askAndValidate(
             $output,
-            'Repo domain url: ',
-            function ($field) {
-                return $field;
+            'Gitlab API base URL (/api/v3): ',
+            function ($url) {
+                return rtrim($url, '/');
             }
         );
 
@@ -124,7 +151,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getTokenGenerationUrl()
     {
-        return $this->url . 'profile/account';
+        return $this->domain . 'profile/account';
     }
 
     /**
@@ -140,7 +167,16 @@ class GitLabAdapter extends BaseAdapter
      */
     public function openIssue($subject, $body, array $options = [])
     {
-        // TODO: Implement openIssue() method.
+        $issue = Issue::castFrom(
+            $this->getCurrentProject()->createIssue(
+                $subject,
+                [
+                    'description' => $body
+                ]
+            )
+        );
+
+        return $issue->toArray();
     }
 
     /**
@@ -148,7 +184,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getIssue($id)
     {
-        // TODO: Implement getIssue() method.
+        return Issue::castFrom($this->client->api('issues')->show($this->getCurrentProject()->id, $id))->toArray();
     }
 
     /**
@@ -156,7 +192,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getIssueUrl($id)
     {
-        // TODO: Implement getIssueUrl() method.
+        return sprintf('%s/%s/%s/issues/%d', $this->domain, $this->getUsername(), $this->getRepository(), $id);
     }
 
     /**
@@ -164,28 +200,14 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getIssues(array $parameters = [])
     {
-        $issues = array();
+        $issues = $this->client->api('issues')->all($this->getCurrentProject()->id);
 
-        foreach ($this->client->api('projects')->accessible(1, 2000) as $project) {
-            if ($project['path_with_namespace'] === $this->getUsername() . '/' . $this->getRepository()) {
-                $issues = $this->client->api('issues')->all($project['id']);
-
-                break;
-            }
-        }
-
-        foreach ($issues as & $issue) {
-            $issue['number'] = $issue['iid'];
-            $issue['user'] = $issue['author'];
-            $issue['user']['login'] = $issue['author']['username'];
-            $issue['assignee']['login'] = $issue['assignee']['username'];
-
-            foreach ($issue['labels'] as $k => $label) {
-                $issue['labels'][$k] = ['name' => $label];
-            }
-        }
-
-        return $issues;
+        return array_map(
+            function($issue) {
+                return Issue::castFrom(Issue::fromArray($this->client, $this->getCurrentProject(), $issue))->toArray();
+            },
+            $issues
+        );
     }
 
     /**
@@ -193,7 +215,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function updateIssue($id, array $parameters)
     {
-        // TODO: Implement updateIssue() method.
+        throw new NotImplemented('Updating issue is not supported.');
     }
 
     /**
@@ -201,7 +223,12 @@ class GitLabAdapter extends BaseAdapter
      */
     public function closeIssue($id)
     {
-        // TODO: Implement closeIssue() method.
+        $issue = $this->client->api('issues')->show($this->getCurrentProject()->id, $id);
+        $issue = Issue::fromArray($this->client, $this->getCurrentProject(), $issue);
+
+        $issue->close();
+
+        return Issue::castFrom($issue)->toArray();
     }
 
     /**
