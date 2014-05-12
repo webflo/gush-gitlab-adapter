@@ -203,6 +203,20 @@ class GitLabAdapter extends BaseAdapter
     {
         $issues = $this->client->api('issues')->all($this->getCurrentProject()->id);
 
+        if (isset($parameters['state'])) {
+            $parameters['state'] = $parameters['state'] === 'open' ? 'opened' : 'closed';
+
+            $issues = array_filter($issues, function($issue) use($parameters) { return $issue['state'] === $parameters['state']; });
+        }
+
+        if (isset($parameters['creator'])) {
+            $issues = array_filter($issues, function($issue) use($parameters) { return $issue['user']['login'] === $parameters['creator']; });
+        }
+
+        if (isset($parameters['assignee'])) {
+            $issues = array_filter($issues, function($issue) use($parameters) { return $issue['assignee']['login'] === $parameters['assignee']; });
+        }
+
         return array_map(
             function($issue) {
                 return Issue::castFrom(Issue::fromArray($this->client, $this->getCurrentProject(), $issue))->toArray();
@@ -326,6 +340,10 @@ class GitLabAdapter extends BaseAdapter
     {
         $mergeRequests = $this->client->api('merge_requests')->all($this->getCurrentProject()->id);
 
+        if (null !== $state) {
+            $mergeRequests = array_filter($mergeRequests, function($mr) use($state) { return $mr['state'] === $state; });
+        }
+
         return array_map(
             function($mr) {
                 return MergeRequest::castFrom(MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr))->toArray();
@@ -339,7 +357,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getPullRequestStates()
     {
-        // TODO: Implement getPullRequestStates() method.
+        return ['opened', 'closed', 'merged'];
     }
 
     /**
