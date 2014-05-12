@@ -12,6 +12,7 @@
 namespace Gush\Adapter;
 
 use Gitlab\Client;
+use Gush\Config;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -43,13 +44,10 @@ class GitLabAdapter extends BaseAdapter
      */
     protected $authenticationType = Client::AUTH_HTTP_TOKEN;
 
-    /**
-     * Initializes the Adapter
-     *
-     * @return void
-     */
-    protected function initialize()
+    public function __construct(Config $configuration)
     {
+        parent::__construct($configuration);
+
         $this->client = $this->buildGitLabClient();
     }
 
@@ -59,8 +57,8 @@ class GitLabAdapter extends BaseAdapter
     protected function buildGitLabClient()
     {
         $config = $this->configuration->get('gitlab');
-        $this->url = rtrim($config['base_url'], '/');
-        $this->domain = rtrim($config['repo_domain_url'], '/');
+        $this->url = rtrim($config['base_url'], '/') . '/';
+        $this->domain = rtrim($config['repo_domain_url'], '/') . '/';
 
         $client = new Client($this->url);
 
@@ -99,7 +97,7 @@ class GitLabAdapter extends BaseAdapter
     {
         $credentials = $this->configuration->get('authentication');
 
-        if (0 === $credentials['http-auth-type']) {
+        if ('http_token' !== $credentials['http-auth-type']) {
             throw new \Exception("Authentication type for GitLab must be Token");
         }
 
@@ -115,9 +113,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function isAuthenticated()
     {
-        $result = $this->client->api('projects')->owned();
-        ladybug_dump_die($result);
-        //return is_array($this->client->api('projects')->owned());
+        return is_array($this->client->api('projects')->owned());
     }
 
     /**
@@ -128,7 +124,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getTokenGenerationUrl()
     {
-        // TODO: Implement getTokenGenerationUrl() method.
+        return $this->url . 'profile/account';
     }
 
     /**
@@ -168,7 +164,28 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getIssues(array $parameters = [])
     {
-        // TODO: Implement getIssues() method.
+        $issues = array();
+
+        foreach ($this->client->api('projects')->accessible(1, 2000) as $project) {
+            if ($project['path_with_namespace'] === $this->getUsername() . '/' . $this->getRepository()) {
+                $issues = $this->client->api('issues')->all($project['id']);
+
+                break;
+            }
+        }
+
+        foreach ($issues as & $issue) {
+            $issue['number'] = $issue['iid'];
+            $issue['user'] = $issue['author'];
+            $issue['user']['login'] = $issue['author']['username'];
+            $issue['assignee']['login'] = $issue['assignee']['username'];
+
+            foreach ($issue['labels'] as $k => $label) {
+                $issue['labels'][$k] = ['name' => $label];
+            }
+        }
+
+        return $issues;
     }
 
     /**
