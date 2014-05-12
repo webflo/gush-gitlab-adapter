@@ -13,7 +13,7 @@ namespace Gush\Adapter;
 
 use Gitlab\Client;
 use Gitlab\Model;
-use Gush\Adapter\Gitlab\Exception\NotImplemented;
+use Gush\Exception;
 use Gush\Config;
 use Gush\Model\Issue;
 use Symfony\Component\Console\Helper\DialogHelper;
@@ -215,7 +215,22 @@ class GitLabAdapter extends BaseAdapter
      */
     public function updateIssue($id, array $parameters)
     {
-        throw new NotImplemented('Updating issue is not supported.');
+        $issue = $this->client->api('issues')->show($this->getCurrentProject()->id, $id);
+        $issue = Issue::fromArray($this->client, $this->getCurrentProject(), $issue);
+
+        if (isset($parameters['assignee'])) {
+            $assignee = $this->client->api('users')->search($parameters['assignee']);
+
+            if (sizeof($assignee) === 0) {
+                throw new \InvalidArgumentException(sprintf('Could not find user %s', $parameters['assignee']));
+            }
+
+            $issue->update([
+                'assignee_id' => current($assignee)['id']
+            ]);
+        }
+
+        return Issue::castFrom($issue)->toArray();
     }
 
     /**
@@ -252,7 +267,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getLabels()
     {
-        // TODO: Implement getLabels() method.
+        throw new Exception\NotSupported('This feature is not supported by Gitlab');
     }
 
     /**

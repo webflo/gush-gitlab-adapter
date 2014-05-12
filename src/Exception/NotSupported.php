@@ -12,7 +12,7 @@
 namespace Gush\Exception;
 
 
-class NotImplemented extends \RuntimeException
+class NotSupported extends \RuntimeException
 {
 
 } 
