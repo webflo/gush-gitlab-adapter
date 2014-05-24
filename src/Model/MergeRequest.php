@@ -16,14 +16,14 @@ use Gitlab\Model;
 /**
  * @author Julien Bianchi <contact@jubianchi.fr>
  */
-class MergeRequest extends Model\Issue
+class MergeRequest extends Model\MergeRequest
 {
-    public static function castFrom(Model\Issue $issue)
+    public static function castFrom(Model\MergeRequest $mr)
     {
-        $cast = new static($issue->project, $issue->id, $issue->getClient());
+        $cast = new static($mr->project, $mr->id, $mr->getClient());
 
         foreach (static::$_properties as $property) {
-            $cast->$property = $issue->$property;
+            $cast->$property = $mr->$property;
         }
 
         return $cast;
@@ -31,23 +31,54 @@ class MergeRequest extends Model\Issue
 
     public function toArray()
     {
-        $issue = array();
+        $mr = array();
 
         foreach (static::$_properties as $property) {
             switch ($property) {
-                case 'iid':
-                    $issue['number'] = $this->$property . ' (' . $this->id . ')';
+                case 'id':
+					$mr['number'] = $this->$property;
                     break;
 
                 case 'author':
-                    $issue['head'] = ['user' => User::castFrom($this->$property)->toArray()];
+					$mr['head'] = ['user' => User::castFrom($this->$property)->toArray()];
                     break;
 
+				case 'state':
+					$mr['state'] = $this->$property;
+					$mr['merged'] = $this->$property === 'merged';
+
+					if ($mr['merged']) {
+						$mr['message'] = 'Merged ' . $this->title . ' into ' . $this->target_branch;
+					}
+					break;
+
                 default:
-                    $issue[$property] = $this->$property;
+					$mr[$property] = $this->$property;
             }
         }
 
-        return $issue;
+        return array_replace(
+			array(
+				'merged' => false,
+				'html_url' => null,
+				'created_at' => null,
+				'updated_at' => null,
+				'message' => null,
+				'sha' => null
+			),
+			$mr
+		);
     }
+
+	public function merge($message = null)
+	{
+		$data = $this->api('merge_requests')
+			->merge(
+				$this->project->id,
+				$this->id,
+				['merge_commit_message' => $message]
+			);
+
+		return static::castFrom(static::fromArray($this->getClient(), $this->project, $data));
+	}
 }

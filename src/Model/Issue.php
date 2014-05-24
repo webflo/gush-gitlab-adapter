@@ -35,8 +35,8 @@ class Issue extends Model\Issue
 
         foreach (static::$_properties as $property) {
             switch ($property) {
-                case 'iid':
-                    $issue['number'] = $this->$property . ' (' . $this->id . ')';
+                case 'id':
+                    $issue['number'] = $this->$property;
                     break;
 
                 case 'author':
@@ -65,6 +65,8 @@ class Issue extends Model\Issue
                 },
                 $this->labels ?: array()
             );
+
+			$issue['html_url'] = '';
         }
 
         return $issue;

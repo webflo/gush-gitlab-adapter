@@ -17,6 +17,7 @@ use Gush\Exception;
 use Gush\Config;
 use Gush\Model\Issue;
 use Gush\Model\MergeRequest;
+use Gush\Model\Project;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -298,7 +299,20 @@ class GitLabAdapter extends BaseAdapter
      */
     public function openPullRequest($base, $head, $subject, $body, array $parameters = [])
     {
-        // TODO: Implement openPullRequest() method.
+		$head = explode(':', $head);
+
+		$mr = MergeRequest::castFrom(
+			$this->getCurrentProject()->createMergeRequest(
+				$head[1],
+				$base,
+				$subject,
+				[
+					'description' => $body
+				]
+			)
+		);
+
+		return $mr->toArray();
     }
 
     /**
@@ -306,7 +320,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getPullRequest($id)
     {
-        // TODO: Implement getPullRequest() method.
+		return MergeRequest::castFrom(MergeRequest::fromArray($this->client, $this->getCurrentProject(), $this->client->api('issues')->show($this->getCurrentProject()->id, $id)))->toArray();
     }
 
     /**
@@ -322,7 +336,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getPullRequestCommits($id)
     {
-        // TODO: Implement getPullRequestCommits() method.
+        return array();
     }
 
     /**
@@ -330,7 +344,10 @@ class GitLabAdapter extends BaseAdapter
      */
     public function mergePullRequest($id, $message)
     {
-        // TODO: Implement mergePullRequest() method.
+		$mr = $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id);
+		$mr = MergeRequest::castFrom(MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr));
+
+		return MergeRequest::castFrom($mr->merge())->toArray();
     }
 
     /**
