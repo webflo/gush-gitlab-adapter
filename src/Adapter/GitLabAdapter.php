@@ -185,7 +185,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getIssue($id)
     {
-        return Issue::castFrom($this->client->api('issues')->show($this->getCurrentProject()->id, $id))->toArray();
+        return Issue::castFrom(Issue::fromArray($this->client, $this->getCurrentProject(), $this->client->api('issues')->show($this->getCurrentProject()->id, $id)))->toArray();
     }
 
     /**
