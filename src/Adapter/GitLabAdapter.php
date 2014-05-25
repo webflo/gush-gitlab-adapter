@@ -17,7 +17,6 @@ use Gush\Exception;
 use Gush\Config;
 use Gush\Model\Issue;
 use Gush\Model\MergeRequest;
-use Gush\Model\Project;
 use Symfony\Component\Console\Helper\DialogHelper;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -382,7 +381,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function createRelease($name, array $parameters = [])
     {
-        // TODO: Implement createRelease() method.
+        throw new Exception\NotSupported('Releases are not supported by Gitlab');
     }
 
     /**
@@ -390,7 +389,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getReleases()
     {
-        // TODO: Implement getReleases() method.
+        throw new Exception\NotSupported('Releases are not supported by Gitlab');
     }
 
     /**
@@ -398,7 +397,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function removeRelease($id)
     {
-        // TODO: Implement removeRelease() method.
+        throw new Exception\NotSupported('Releases are not supported by Gitlab');
     }
 
     /**
@@ -406,6 +405,6 @@ class GitLabAdapter extends BaseAdapter
      */
     public function createReleaseAssets($id, $name, $contentType, $content)
     {
-        // TODO: Implement createReleaseAssets() method.
+        throw new Exception\NotSupported('Releases are not supported by Gitlab');
     }
 }
