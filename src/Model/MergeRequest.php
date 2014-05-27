@@ -69,16 +69,4 @@ class MergeRequest extends Model\MergeRequest
 			$mr
 		);
     }
-
-	public function merge($message = null)
-	{
-		$data = $this->api('merge_requests')
-			->merge(
-				$this->project->id,
-				$this->id,
-				['merge_commit_message' => $message]
-			);
-
-		return static::castFrom(static::fromArray($this->getClient(), $this->project, $data));
-	}
 }

@@ -168,16 +168,16 @@ class GitLabAdapter extends BaseAdapter
      */
     public function openIssue($subject, $body, array $options = [])
     {
-        $issue = Issue::castFrom(
-            $this->getCurrentProject()->createIssue(
+        return Issue::fromArray(
+            $this->client,
+            $this->getCurrentProject(),
+            Issue::castFrom($this->getCurrentProject()->createIssue(
                 $subject,
                 [
                     'description' => $body
                 ]
-            )
+            ))->toArray()
         );
-
-        return $issue->toArray();
     }
 
     /**
@@ -185,7 +185,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getIssue($id)
     {
-        return Issue::castFrom(Issue::fromArray($this->client, $this->getCurrentProject(), $this->client->api('issues')->show($this->getCurrentProject()->id, $id)))->toArray();
+        return Issue::fromArray($this->client, $this->getCurrentProject(), $this->client->api('issues')->show($this->getCurrentProject()->id, $id))->toArray();
     }
 
     /**
@@ -219,13 +219,13 @@ class GitLabAdapter extends BaseAdapter
 
         return array_map(
             function($issue) {
-                return Issue::castFrom(Issue::fromArray($this->client, $this->getCurrentProject(), $issue))->toArray();
+                return Issue::fromArray($this->client, $this->getCurrentProject(), $issue)->toArray();
             },
             $issues
         );
     }
 
-    /**
+	/**
      * {@inheritdoc}
      */
     public function updateIssue($id, array $parameters)
@@ -256,9 +256,7 @@ class GitLabAdapter extends BaseAdapter
         $issue = $this->client->api('issues')->show($this->getCurrentProject()->id, $id);
         $issue = Issue::fromArray($this->client, $this->getCurrentProject(), $issue);
 
-        $issue->close();
-
-        return Issue::castFrom($issue)->toArray();
+        return Issue::castFrom($issue->close())->toArray();
     }
 
     /**
@@ -298,20 +296,19 @@ class GitLabAdapter extends BaseAdapter
      */
     public function openPullRequest($base, $head, $subject, $body, array $parameters = [])
     {
-		$head = explode(':', $head);
+        $head = explode(':', $head);
 
-		$mr = MergeRequest::castFrom(
-			$this->getCurrentProject()->createMergeRequest(
-				$head[1],
-				$base,
-				$subject,
-				[
-					'description' => $body
-				]
-			)
-		);
+        $mr = MergeRequest::castFrom(
+            $this->getCurrentProject()->createMergeRequest(
+                $head[1],
+                $base,
+                $subject,
+				null,
+                $body
+            )
+        );
 
-		return $mr->toArray();
+        return $mr->toArray();
     }
 
     /**
@@ -319,7 +316,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getPullRequest($id)
     {
-		return MergeRequest::castFrom(MergeRequest::fromArray($this->client, $this->getCurrentProject(), $this->client->api('issues')->show($this->getCurrentProject()->id, $id)))->toArray();
+        return MergeRequest::fromArray($this->client, $this->getCurrentProject(), $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id))->toArray();
     }
 
     /**
@@ -343,10 +340,10 @@ class GitLabAdapter extends BaseAdapter
      */
     public function mergePullRequest($id, $message)
     {
-		$mr = $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id);
-		$mr = MergeRequest::castFrom(MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr));
+        $mr = $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id);
+        $mr = MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr);
 
-		return MergeRequest::castFrom($mr->merge())->toArray();
+        return $mr->merge($message)->toArray();
     }
 
     /**
@@ -362,7 +359,7 @@ class GitLabAdapter extends BaseAdapter
 
         return array_map(
             function($mr) {
-                return MergeRequest::castFrom(MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr))->toArray();
+                return MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr)->toArray();
             },
             $mergeRequests
         );
