@@ -40,7 +40,11 @@ class MergeRequest extends Model\MergeRequest
                     break;
 
                 case 'author':
-					$mr['head'] = ['user' => User::castFrom($this->$property)->toArray()];
+					if (false === isset($mr['head'])) {
+						$mr['head'] = [];
+					}
+
+					$mr['head']['user'] = User::castFrom($this->$property)->toArray();
                     break;
 
 				case 'state':
@@ -52,19 +56,37 @@ class MergeRequest extends Model\MergeRequest
 					}
 					break;
 
+				case 'source_branch':
+					if (false === isset($mr['head'])) {
+						$mr['head'] = [];
+					}
+
+					$mr['head']['ref'] = $this->$property;
+					break;
+
+				case 'target_branch':
+					$mr['base'] = array('ref' => $this->$property);
+					break;
+
                 default:
 					$mr[$property] = $this->$property;
             }
         }
 
-        return array_replace(
+        return array_replace_recursive(
 			array(
 				'merged' => false,
 				'html_url' => null,
 				'created_at' => null,
 				'updated_at' => null,
 				'message' => null,
-				'sha' => null
+				'sha' => null,
+				'base' => array(
+					'ref' => null
+				),
+				'head' => array(
+					'ref' => null
+				)
 			),
 			$mr
 		);
