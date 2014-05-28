@@ -168,16 +168,12 @@ class GitLabAdapter extends BaseAdapter
      */
     public function openIssue($subject, $body, array $options = [])
     {
-        return Issue::fromArray(
-            $this->client,
-            $this->getCurrentProject(),
-            Issue::castFrom($this->getCurrentProject()->createIssue(
-                $subject,
-                [
-                    'description' => $body
-                ]
-            ))->toArray()
-        );
+		return Issue::castFrom($this->getCurrentProject()->createIssue(
+			$subject,
+			[
+				'description' => $body
+			]
+		))->toArray();
     }
 
     /**
