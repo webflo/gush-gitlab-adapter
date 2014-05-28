@@ -11,8 +11,7 @@
 
 namespace Gush\Exception;
 
-
-class NotImplemented extends \RuntimeException
+class NotImplemented extends AdapterException
 {
 
-} 
+}

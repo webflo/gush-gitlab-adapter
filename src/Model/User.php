@@ -31,7 +31,7 @@ class User extends Model\User
 
     public function toArray()
     {
-        $user = array();
+        $user = [];
 
         foreach (static::$_properties as $property) {
             switch ($property) {

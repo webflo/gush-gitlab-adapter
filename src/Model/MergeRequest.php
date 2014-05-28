@@ -36,59 +36,63 @@ class MergeRequest extends Model\MergeRequest
         foreach (static::$_properties as $property) {
             switch ($property) {
                 case 'id':
-					$mr['number'] = $this->$property;
+                    $mr['number'] = $this->$property;
                     break;
 
                 case 'author':
-					if (false === isset($mr['head'])) {
-						$mr['head'] = [];
-					}
+                    if (false === isset($mr['head'])) {
+                        $mr['head'] = [];
+                    }
 
-					$mr['head']['user'] = User::castFrom($this->$property)->toArray();
+                    $mr['head']['user'] = $this->$property->username;
                     break;
 
-				case 'state':
-					$mr['state'] = $this->$property;
-					$mr['merged'] = $this->$property === 'merged';
+                case 'state':
+                    $mr['state'] = $this->$property;
+                    $mr['merged'] = $this->$property === 'merged';
 
-					if ($mr['merged']) {
-						$mr['message'] = 'Merged ' . $this->title . ' into ' . $this->target_branch;
-					}
-					break;
+                    if ($mr['merged']) {
+                        $mr['message'] = 'Merged ' . $this->title . ' into ' . $this->target_branch;
+                    }
+                    break;
 
-				case 'source_branch':
-					if (false === isset($mr['head'])) {
-						$mr['head'] = [];
-					}
+                case 'source_branch':
+                    if (false === isset($mr['head'])) {
+                        $mr['head'] = [];
+                    }
 
-					$mr['head']['ref'] = $this->$property;
-					break;
+                    $mr['head']['ref'] = $this->$property;
+                    break;
 
-				case 'target_branch':
-					$mr['base'] = array('ref' => $this->$property);
-					break;
+                case 'target_branch':
+                    $mr['base'] = array('label' => $this->$property, 'ref' => $this->$property);
+                    break;
 
                 default:
-					$mr[$property] = $this->$property;
+                    $mr[$property] = $this->$property;
             }
         }
 
         return array_replace_recursive(
-			array(
-				'merged' => false,
-				'html_url' => null,
-				'created_at' => null,
-				'updated_at' => null,
-				'message' => null,
-				'sha' => null,
-				'base' => array(
-					'ref' => null
-				),
-				'head' => array(
-					'ref' => null
-				)
-			),
-			$mr
-		);
+            [
+                'merged' => false,
+                'url' => null,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
+                'message' => null,
+                'body' => null,
+                'label' => null,
+                'sha' => null,
+                'base' => array(
+                    'label' => null,
+                    'ref' => null
+                ),
+                'head' => array(
+                    'user' => null,
+                    'ref' => null,
+                )
+            ],
+            $mr
+        );
     }
 }
