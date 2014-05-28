@@ -260,7 +260,13 @@ class GitLabAdapter extends BaseAdapter
      */
     public function createComment($id, $message)
     {
-        // TODO: Implement createComment() method.
+		$issue = Issue::fromArray(
+			$this->client,
+			$this->getCurrentProject(),
+			$this->client->api('issues')->show($this->getCurrentProject()->id, $id)
+		);
+
+		return $issue->addComment($message);
     }
 
     /**
@@ -268,7 +274,13 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getComments($id)
     {
-        // TODO: Implement getComments() method.
+		$issue = Issue::fromArray(
+			$this->client,
+			$this->getCurrentProject(),
+			$this->client->api('issues')->show($this->getCurrentProject()->id, $id)
+		);
+
+		return $issue->showComments();
     }
 
     /**
