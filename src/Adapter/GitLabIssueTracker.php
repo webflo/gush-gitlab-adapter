@@ -19,6 +19,7 @@ use Gush\Model\Issue;
 /**
  * @author Luis Cordova <cordoval@gmail.com>
  * @author Aaron Scherer <aequasi@gmail.com>
+ * @author Julien Bianchi <contact@jubianchi.fr>
  */
 class GitLabIssueTracker extends BaseIssueTracker
 {

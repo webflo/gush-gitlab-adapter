@@ -20,6 +20,7 @@ use Gush\Model\MergeRequest;
 /**
  * @author Luis Cordova <cordoval@gmail.com>
  * @author Aaron Scherer <aequasi@gmail.com>
+ * @author Julien Bianchi <contact@jubianchi.fr>
  */
 class GitLabAdapter extends BaseAdapter
 {
