@@ -11,8 +11,7 @@
 
 namespace Gush\Exception;
 
-
-class NotSupported extends \RuntimeException
+class NotSupported extends AdapterException
 {
 
-} 
+}

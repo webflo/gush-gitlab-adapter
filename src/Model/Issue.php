@@ -40,12 +40,12 @@ class Issue extends Model\Issue
                     break;
 
                 case 'author':
-                    $issue['user'] = User::castFrom($this->$property)->toArray();
+                    $issue['user'] = $this->$property->username;
                     break;
 
                 case 'assignee':
                     if (null !== $this->$property) {
-                        $issue['assignee'] = User::castFrom($this->$property)->toArray();
+                        $issue['assignee'] = $this->$property->username;
                     } else {
                         $issue['assignee'] = null;
                     }
@@ -55,18 +55,17 @@ class Issue extends Model\Issue
                     $issue['body'] = $this->$property;
                     break;
 
+                case 'created_at':
+                case 'updated_at':
+                    $issue[$property] = new \DateTime($this->$property);
+                    break;
+
                 default:
                     $issue[$property] = $this->$property;
             }
 
-            $issue['labels'] = array_map(
-                function($label) {
-                    return ['name' => $label];
-                },
-                $this->labels ?: array()
-            );
-
-			$issue['html_url'] = '';
+            $issue['url'] = '';
+            $issue['pull_request'] = false;
         }
 
         return $issue;

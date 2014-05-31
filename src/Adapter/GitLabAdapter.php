@@ -14,11 +14,8 @@ namespace Gush\Adapter;
 use Gitlab\Client;
 use Gitlab\Model;
 use Gush\Exception;
-use Gush\Config;
 use Gush\Model\Issue;
 use Gush\Model\MergeRequest;
-use Symfony\Component\Console\Helper\DialogHelper;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @author Luis Cordova <cordoval@gmail.com>
@@ -26,50 +23,34 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class GitLabAdapter extends BaseAdapter
 {
-    const NAME = 'gitlab';
-
-    /**
-     * @var string|null
-     */
-    protected $url;
-
-    /**
-     * @var string|null
-     */
-    protected $domain;
-
     /**
      * @var Client|null
      */
     private $client;
 
     /**
-     * @var string
+     * {@inheritdoc}
      */
-    protected $authenticationType = Client::AUTH_HTTP_TOKEN;
-
-    public function __construct(Config $configuration)
+    public function __construct(array $configuration)
     {
-        parent::__construct($configuration);
-
-        $this->client = $this->buildGitLabClient();
+        $this->configuration = $configuration;
     }
 
     /**
-     * @return Client
+     * @param Client $client
+     *
+     * @return $this
      */
-    protected function buildGitLabClient()
+    public function setClient(Client $client)
     {
-        $config = $this->configuration->get('gitlab');
-        $this->url = trim($config['base_url'], '/');
-        $this->domain = trim($config['repo_domain_url'], '/');
+        $this->client = $client;
 
-        $client = new Client($this->domain . '/' . $this->url . '/');
-
-        return $client;
+        return $this;
     }
 
     /**
+     * @throws \RuntimeException
+     *
      * @return Model\Project
      */
     protected function getCurrentProject()
@@ -87,53 +68,26 @@ class GitLabAdapter extends BaseAdapter
         }
 
         if (null === $currentProject) {
-            throw new \RuntimeException(sprintf('Could not guess current %s project, tried %s/%s', static::NAME, $this->getUsername(), $this->getRepository()));
+            throw new \RuntimeException(sprintf('Could not guess current gitlab project, tried %s/%s', $this->getUsername(), $this->getRepository()));
         }
 
         return $currentProject;
     }
 
-    public static function doConfiguration(OutputInterface $output, DialogHelper $dialog)
-    {
-        $config = [];
-
-        $config['repo_domain_url'] = $dialog->askAndValidate(
-            $output,
-            'Gitlab URL (http://gitlab-host): ',
-            function ($domain) {
-                return rtrim($domain, '/');
-            }
-        );
-
-        $output->writeln('<comment>Enter your GitLab URL: </comment>');
-        $config['base_url'] = $dialog->askAndValidate(
-            $output,
-            'Gitlab API base URL (/api/v3): ',
-            function ($url) {
-                return rtrim($url, '/');
-            }
-        );
-
-        return $config;
-    }
-
     /**
      * @throws \Exception
+     *
      * @return Boolean
      */
     public function authenticate()
     {
-        $credentials = $this->configuration->get('authentication');
-
-        if ('http_token' !== $credentials['http-auth-type']) {
+        if (Configurator::AUTH_HTTP_TOKEN !== $this->configuration['authentication']['http-auth-type']) {
             throw new \Exception("Authentication type for GitLab must be Token");
         }
 
-        $this->client->authenticate($credentials['password-or-token'], Client::AUTH_HTTP_TOKEN);
+        $this->client->authenticate($this->configuration['authentication']['password-or-token'], Client::AUTH_HTTP_TOKEN);
 
-        $this->authenticationType = Client::AUTH_HTTP_TOKEN;
-
-        return;
+        return true;
     }
 
     /**
@@ -152,7 +106,7 @@ class GitLabAdapter extends BaseAdapter
      */
     public function getTokenGenerationUrl()
     {
-        return $this->domain . 'profile/account';
+        return sprintf('%/profile/account', $this->configuration['repo_domain_url']);
     }
 
     /**
@@ -160,73 +114,71 @@ class GitLabAdapter extends BaseAdapter
      */
     public function createFork($org)
     {
-        // TODO: Implement createFork() method.
+        throw new Exception\NotSupported('Forking is not supported by Gitlab');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function openIssue($subject, $body, array $options = [])
+    public function getPullRequestUrl($id)
     {
-		return Issue::castFrom($this->getCurrentProject()->createIssue(
-			$subject,
-			[
-				'description' => $body
-			]
-		))->toArray();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIssue($id)
-    {
-        return Issue::fromArray($this->client, $this->getCurrentProject(), $this->client->api('issues')->show($this->getCurrentProject()->id, $id))->toArray();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIssueUrl($id)
-    {
-        return sprintf('%s/%s/%s/issues/%d', $this->domain, $this->getUsername(), $this->getRepository(), $id);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIssues(array $parameters = [])
-    {
-        $issues = $this->client->api('issues')->all($this->getCurrentProject()->id);
-
-        if (isset($parameters['state'])) {
-            $parameters['state'] = $parameters['state'] === 'open' ? 'opened' : 'closed';
-
-            $issues = array_filter($issues, function($issue) use($parameters) { return $issue['state'] === $parameters['state']; });
-        }
-
-        if (isset($parameters['creator'])) {
-            $issues = array_filter($issues, function($issue) use($parameters) { return $issue['user']['login'] === $parameters['creator']; });
-        }
-
-        if (isset($parameters['assignee'])) {
-            $issues = array_filter($issues, function($issue) use($parameters) { return $issue['assignee']['login'] === $parameters['assignee']; });
-        }
-
-        return array_map(
-            function($issue) {
-                return Issue::fromArray($this->client, $this->getCurrentProject(), $issue)->toArray();
-            },
-            $issues
+        return sprintf(
+            '%s/%s/%s/merge_requests/%d',
+            $this->configuration['repo_domain_url'],
+            $this->getUsername(),
+            $this->getRepository(),
+            $this->getPullRequest($id)['iid']
         );
     }
 
-	/**
+    /**
      * {@inheritdoc}
      */
-    public function updateIssue($id, array $parameters)
+    public function createComment($id, $message)
     {
-        $issue = $this->client->api('issues')->show($this->getCurrentProject()->id, $id);
+        $issue = MergeRequest::fromArray(
+            $this->client,
+            $this->getCurrentProject(),
+            $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id)
+        );
+        $comment = $issue->addComment($message);
+
+        return sprintf('%s#note_%d', $this->getPullRequestUrl($id), $comment->id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getComments($id)
+    {
+        $issue = MergeRequest::fromArray(
+            $this->client,
+            $this->getCurrentProject(),
+            $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id)
+        );
+
+        return $issue->showComments();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLabels()
+    {
+        throw new Exception\NotSupported('Labels are not supported by Gitlab');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getMilestones(array $parameters = [])
+    {
+        return $this->client->api('milestones')->all($this->getCurrentProject()->id);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function updatePullRequest($id, array $parameters)
+    {
+        $issue = $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id);
         $issue = Issue::fromArray($this->client, $this->getCurrentProject(), $issue);
 
         if (isset($parameters['assignee'])) {
@@ -240,63 +192,16 @@ class GitLabAdapter extends BaseAdapter
                 'assignee_id' => current($assignee)['id']
             ]);
         }
-
-        return Issue::castFrom($issue)->toArray();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function closeIssue($id)
+    public function closePullRequest($id)
     {
-        $issue = $this->client->api('issues')->show($this->getCurrentProject()->id, $id);
-        $issue = Issue::fromArray($this->client, $this->getCurrentProject(), $issue);
+        $mr = MergeRequest::fromArray($this->client, $this->getCurrentProject(), $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id));
 
-        return Issue::castFrom($issue->close())->toArray();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createComment($id, $message)
-    {
-		$issue = Issue::fromArray(
-			$this->client,
-			$this->getCurrentProject(),
-			$this->client->api('issues')->show($this->getCurrentProject()->id, $id)
-		);
-
-		return $issue->addComment($message);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getComments($id)
-    {
-		$issue = Issue::fromArray(
-			$this->client,
-			$this->getCurrentProject(),
-			$this->client->api('issues')->show($this->getCurrentProject()->id, $id)
-		);
-
-		return $issue->showComments();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getLabels()
-    {
-        throw new Exception\NotSupported('This feature is not supported by Gitlab');
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getMilestones(array $parameters = [])
-    {
-        return $this->client->api('milestones')->all($this->getCurrentProject()->id);
+        return $mr->close()->id;
     }
 
     /**
@@ -311,7 +216,7 @@ class GitLabAdapter extends BaseAdapter
                 $head[1],
                 $base,
                 $subject,
-				null,
+                null,
                 $body
             )
         );
@@ -330,17 +235,9 @@ class GitLabAdapter extends BaseAdapter
     /**
      * {@inheritdoc}
      */
-    public function getPullRequestUrl($id)
-    {
-        return sprintf('%s/%s/%s/merge_requests/%d', $this->domain, $this->getUsername(), $this->getRepository(), $id);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function getPullRequestCommits($id)
     {
-        return array();
+        return [];
     }
 
     /**
@@ -350,23 +247,22 @@ class GitLabAdapter extends BaseAdapter
     {
         $mr = $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id);
         $mr = MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr);
-
-        return $mr->merge($message)->toArray();
+        $mr->merge($message);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getPullRequests($state = null)
+    public function getPullRequests($state = null, $page = 1, $perPage = 30)
     {
         $mergeRequests = $this->client->api('merge_requests')->all($this->getCurrentProject()->id);
 
         if (null !== $state) {
-            $mergeRequests = array_filter($mergeRequests, function($mr) use($state) { return $mr['state'] === $state; });
+            $mergeRequests = array_filter($mergeRequests, function ($mr) use ($state) { return $mr['state'] === $state; });
         }
 
         return array_map(
-            function($mr) {
+            function ($mr) {
                 return MergeRequest::fromArray($this->client, $this->getCurrentProject(), $mr)->toArray();
             },
             $mergeRequests
