@@ -46,10 +46,10 @@ class GitLabFactory
      */
     public static function createAdapterConfigurator(HelperSet $helperSet)
     {
-        return new DefaultConfigurator(
+        return new GitlabConfigurator(
             $helperSet->get('dialog'),
             'Gitlab',
-            'http://gitlab/api/v3',
+            'http://gitlab-host/api/v3',
             'http://gitlab-host',
             [['Token', Configurator::AUTH_HTTP_TOKEN]]
         );
