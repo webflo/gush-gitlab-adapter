@@ -48,7 +48,12 @@ class GitLabAdapter extends BaseAdapter
         return $this;
     }
 
-    /**
+	public function supportsRepository($remoteUrl)
+	{
+		return false !== stripos($remoteUrl, parse_url($this->configuration['repo_domain_url'])['host']);
+	}
+
+	/**
      * @throws \RuntimeException
      *
      * @return Model\Project
@@ -210,18 +215,18 @@ class GitLabAdapter extends BaseAdapter
     public function openPullRequest($base, $head, $subject, $body, array $parameters = [])
     {
         $head = explode(':', $head);
+        $mr = $this->getCurrentProject()->createMergeRequest(
+			$head[1],
+			$base,
+			$subject,
+			null,
+			$body
+		);
 
-        $mr = MergeRequest::castFrom(
-            $this->getCurrentProject()->createMergeRequest(
-                $head[1],
-                $base,
-                $subject,
-                null,
-                $body
-            )
-        );
-
-        return $mr->toArray();
+        return array(
+			'html_url' => $this->getPullRequestUrl($mr->id),
+			'number' => $mr->iid
+		);
     }
 
     /**
