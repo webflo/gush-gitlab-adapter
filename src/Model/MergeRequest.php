@@ -68,6 +68,10 @@ class MergeRequest extends Model\MergeRequest
                     $mr['base'] = array('label' => $this->$property, 'ref' => $this->$property);
                     break;
 
+				case 'description':
+					$mr['body'] = $this->$property;
+					break;
+
                 default:
                     $mr[$property] = $this->$property;
             }

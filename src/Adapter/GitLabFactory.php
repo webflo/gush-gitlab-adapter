@@ -32,7 +32,7 @@ class GitLabFactory
      */
     public static function createAdapter(array $adapterConfig, Config $globalConfig)
     {
-        $adapter = new GitLabAdapter($adapterConfig);
+        $adapter = new GitLabRepoAdapter($adapterConfig);
 
         return $adapter->setClient(static::getGitlabClient($adapterConfig['base_url']));
     }
