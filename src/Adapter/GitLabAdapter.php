@@ -12,102 +12,81 @@
 namespace Gush\Adapter;
 
 use Gitlab\Client;
-use Symfony\Component\Console\Helper\DialogHelper;
-use Symfony\Component\Console\Output\OutputInterface;
+use Gitlab\Model;
+use Gush\Exception;
+use Gush\Model\Issue;
+use Gush\Model\MergeRequest;
 
 /**
- * @author Luis Cordova <cordoval@gmail.com>
- * @author Aaron Scherer <aequasi@gmail.com>
+ * @author Julien Bianchi <contact@jubianchi.fr>
  */
-class GitLabAdapter extends BaseAdapter
+trait GitLabAdapter
 {
-    const NAME = 'gitlab';
+	/**
+	 * @var Client|null
+	 */
+	protected $client;
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function __construct(array $configuration)
+	{
+		$this->configuration = $configuration;
+	}
 
     /**
-     * @var string|null
-     */
-    protected $url;
-
-    /**
-     * @var string|null
-     */
-    protected $domain;
-
-    /**
-     * @var Client|null
-     */
-    private $client;
-
-    /**
-     * @var string
-     */
-    protected $authenticationType = Client::AUTH_HTTP_TOKEN;
-
-    /**
-     * Initializes the Adapter
+     * @param Client $client
      *
-     * @return void
+     * @return $this
      */
-    protected function initialize()
+    public function setClient(Client $client)
     {
-        $this->client = $this->buildGitLabClient();
+        $this->client = $client;
+
+        return $this;
     }
 
-    /**
-     * @return Client
+	/**
+     * @throws \RuntimeException
+     *
+     * @return Model\Project
      */
-    protected function buildGitLabClient()
+    protected function getCurrentProject()
     {
-        $config = $this->configuration->get('gitlab');
-        $this->url = rtrim($config['base_url'], '/');
-        $this->domain = rtrim($config['repo_domain_url'], '/');
+        static $currentProject;
 
-        $client = new Client($this->url);
+        if (null === $currentProject) {
+            foreach ($this->client->api('projects')->accessible(1, 2000) as $project) {
+                if ($project['path_with_namespace'] === $this->getUsername() . '/' . $this->getRepository()) {
+                    $currentProject = Model\Project::fromArray($this->client, $project);
 
-        return $client;
-    }
-
-    public static function doConfiguration(OutputInterface $output, DialogHelper $dialog)
-    {
-        $config = [];
-
-        $output->writeln('<comment>Enter your GitLab URL: </comment>');
-        $config['base_url'] = $dialog->askAndValidate(
-            $output,
-            'Api url: ',
-            function ($url) {
-                return filter_var($url, FILTER_VALIDATE_URL);
+                    break;
+                }
             }
-        );
+        }
 
-        $config['repo_domain_url'] = $dialog->askAndValidate(
-            $output,
-            'Repo domain url: ',
-            function ($field) {
-                return $field;
-            }
-        );
+        if (null === $currentProject) {
+            throw new \RuntimeException(sprintf('Could not guess current gitlab project, tried %s/%s', $this->getUsername(), $this->getRepository()));
+        }
 
-        return $config;
+        return $currentProject;
     }
 
     /**
      * @throws \Exception
+     *
      * @return Boolean
      */
     public function authenticate()
     {
-        $credentials = $this->configuration->get('authentication');
-
-        if (0 === $credentials['http-auth-type']) {
+        if (Configurator::AUTH_HTTP_TOKEN !== $this->configuration['authentication']['http-auth-type']) {
             throw new \Exception("Authentication type for GitLab must be Token");
         }
 
-        $this->client->authenticate($credentials['password-or-token'], Client::AUTH_HTTP_TOKEN);
+        $this->client->authenticate($this->configuration['authentication']['password-or-token'], Client::AUTH_HTTP_TOKEN);
 
-        $this->authenticationType = Client::AUTH_HTTP_TOKEN;
-
-        return;
+        return true;
     }
 
     /**
@@ -115,195 +94,14 @@ class GitLabAdapter extends BaseAdapter
      */
     public function isAuthenticated()
     {
-        $result = $this->client->api('projects')->owned();
-        ladybug_dump_die($result);
-        //return is_array($this->client->api('projects')->owned());
+        return is_array($this->client->api('projects')->owned());
     }
 
-    /**
-     * Returns the URL for generating a token.
-     * If the adapter does not support tokens, returns null
-     *
-     * @return null|string
-     */
+	/**
+	 * {@inheritdoc}
+	 */
     public function getTokenGenerationUrl()
     {
-        // TODO: Implement getTokenGenerationUrl() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createFork($org)
-    {
-        // TODO: Implement createFork() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function openIssue($subject, $body, array $options = [])
-    {
-        // TODO: Implement openIssue() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIssue($id)
-    {
-        // TODO: Implement getIssue() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIssueUrl($id)
-    {
-        // TODO: Implement getIssueUrl() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getIssues(array $parameters = [])
-    {
-        // TODO: Implement getIssues() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function updateIssue($id, array $parameters)
-    {
-        // TODO: Implement updateIssue() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function closeIssue($id)
-    {
-        // TODO: Implement closeIssue() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createComment($id, $message)
-    {
-        // TODO: Implement createComment() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getComments($id)
-    {
-        // TODO: Implement getComments() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getLabels()
-    {
-        // TODO: Implement getLabels() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getMilestones(array $parameters = [])
-    {
-        // TODO: Implement getMilestones() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function openPullRequest($base, $head, $subject, $body, array $parameters = [])
-    {
-        // TODO: Implement openPullRequest() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPullRequest($id)
-    {
-        // TODO: Implement getPullRequest() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPullRequestUrl($id)
-    {
-        // TODO: Implement getPullRequestUrl() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPullRequestCommits($id)
-    {
-        // TODO: Implement getPullRequestCommits() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function mergePullRequest($id, $message)
-    {
-        // TODO: Implement mergePullRequest() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPullRequests($state = null)
-    {
-        // TODO: Implement getPullRequests() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPullRequestStates()
-    {
-        // TODO: Implement getPullRequestStates() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createRelease($name, array $parameters = [])
-    {
-        // TODO: Implement createRelease() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getReleases()
-    {
-        // TODO: Implement getReleases() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function removeRelease($id)
-    {
-        // TODO: Implement removeRelease() method.
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function createReleaseAssets($id, $name, $contentType, $content)
-    {
-        // TODO: Implement createReleaseAssets() method.
+        return sprintf('%/profile/account', $this->configuration['repo_domain_url']);
     }
 }
