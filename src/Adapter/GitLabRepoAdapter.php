@@ -24,19 +24,19 @@ use Gush\Model\MergeRequest;
  */
 class GitLabRepoAdapter extends BaseAdapter
 {
-	use GitLabAdapter;
+    use GitLabAdapter;
 
-	public function supportsRepository($remoteUrl)
-	{
-		return false !== stripos($remoteUrl, parse_url($this->configuration['repo_domain_url'])['host']);
-	}
+    public function supportsRepository($remoteUrl)
+    {
+        return false !== stripos($remoteUrl, parse_url($this->configuration['repo_domain_url'])['host']);
+    }
 
     /**
      * {@inheritdoc}
      */
     public function createFork($org)
     {
-        throw new Exception\NotSupported('Forking is not supported by Gitlab');
+        throw new Exception\UnsuportedOperationException('Forking is not supported by Gitlab');
     }
 
     public function getPullRequestUrl($id)
@@ -84,7 +84,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function getLabels()
     {
-        throw new Exception\NotSupported('Labels are not supported by Gitlab');
+        throw new Exception\UnsuportedOperationException('Labels are not supported by Gitlab');
     }
 
     /**
@@ -133,17 +133,17 @@ class GitLabRepoAdapter extends BaseAdapter
     {
         $head = explode(':', $head);
         $mr = $this->getCurrentProject()->createMergeRequest(
-			$head[1],
-			$base,
-			$subject,
-			null,
-			$body
-		);
+            $head[1],
+            $base,
+            $subject,
+            null,
+            $body
+        );
 
         return array(
-			'html_url' => $this->getPullRequestUrl($mr->id),
-			'number' => $mr->iid
-		);
+            'html_url' => $this->getPullRequestUrl($mr->id),
+            'number' => $mr->iid
+        );
     }
 
     /**
@@ -204,7 +204,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function createRelease($name, array $parameters = [])
     {
-        throw new Exception\NotSupported('Releases are not supported by Gitlab');
+        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
     }
 
     /**
@@ -212,7 +212,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function getReleases()
     {
-        throw new Exception\NotSupported('Releases are not supported by Gitlab');
+        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
     }
 
     /**
@@ -220,7 +220,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function removeRelease($id)
     {
-        throw new Exception\NotSupported('Releases are not supported by Gitlab');
+        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
     }
 
     /**
@@ -228,6 +228,6 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function createReleaseAssets($id, $name, $contentType, $content)
     {
-        throw new Exception\NotSupported('Releases are not supported by Gitlab');
+        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
     }
 }
