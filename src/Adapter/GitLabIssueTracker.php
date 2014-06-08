@@ -23,7 +23,7 @@ use Gush\Model\Issue;
  */
 class GitLabIssueTracker extends BaseIssueTracker
 {
-	use GitLabAdapter;
+    use GitLabAdapter;
 
     /**
      * {@inheritdoc}
@@ -37,7 +37,7 @@ class GitLabIssueTracker extends BaseIssueTracker
             ]
         );
 
-		return $issue->id;
+        return $issue->id;
     }
 
     /**
@@ -155,7 +155,7 @@ class GitLabIssueTracker extends BaseIssueTracker
      */
     public function getLabels()
     {
-        throw new Exception\NotSupported('Labels are not supported by Gitlab');
+        throw new Exception\UnsuportedOperationException('Labels are not supported by Gitlab');
     }
 
     /**
