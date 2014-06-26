@@ -47,7 +47,7 @@ class GitLabFactory
     public static function createAdapterConfigurator(HelperSet $helperSet)
     {
         return new GitlabConfigurator(
-            $helperSet->get('dialog'),
+            $helperSet->get('question'),
             'Gitlab',
             'http://gitlab-host/api/v3',
             'http://gitlab-host',
