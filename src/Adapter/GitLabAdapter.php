@@ -11,11 +11,10 @@
 
 namespace Gush\Adapter;
 
+use Buzz\Message\Response;
 use Gitlab\Client;
 use Gitlab\Model;
 use Gush\Exception;
-use Gush\Model\Issue;
-use Gush\Model\MergeRequest;
 
 /**
  * @author Julien Bianchi <contact@jubianchi.fr>
@@ -57,20 +56,55 @@ trait GitLabAdapter
         static $currentProject;
 
         if (null === $currentProject) {
-            foreach ($this->client->api('projects')->accessible(1, 2000) as $project) {
-                if ($project['path_with_namespace'] === $this->getUsername() . '/' . $this->getRepository()) {
-                    $currentProject = Model\Project::fromArray($this->client, $project);
-
-                    break;
-                }
-            }
+            $currentProject = $this->findProject($this->getUsername(), $this->getRepository());
         }
 
         if (null === $currentProject) {
-            throw new \RuntimeException(sprintf('Could not guess current gitlab project, tried %s/%s', $this->getUsername(), $this->getRepository()));
+            throw new \RuntimeException(
+                sprintf(
+                    'Could not guess current gitlab project, tried %s/%s',
+                    $this->getUsername(),
+                    $this->getRepository()
+                )
+            );
         }
 
         return $currentProject;
+    }
+
+    protected function findProject($namespace, $projectName)
+    {
+        $projects = $this->client->api('projects')->accessible(1, 100);
+        $currentModel = null;
+
+        // loop until we find a matching project or run-out of pages
+        while (true) {
+            foreach ($projects as $project) {
+                if ($project['path_with_namespace'] === $namespace.'/'.$projectName) {
+                    $currentModel = Model\Project::fromArray($this->client, $project);
+
+                    break 2;
+                }
+            }
+
+            $paginating = $this->getPagination($this->client->getHttpClient()->getLastResponse());
+
+            if (!isset($paginating['next'])) {
+                break;
+            }
+
+            $projects = $this->client->getHttpClient()->get(
+                substr($paginating['next'], strlen($this->configuration['base_url']))
+            )->getContent();
+        }
+
+        if (!$currentModel) {
+            throw new \RuntimeException(
+                sprintf('Could not find gitlab project id with %s/%s', $namespace, $projectName)
+            );
+        }
+
+        return $currentModel;
     }
 
     /**
@@ -103,5 +137,26 @@ trait GitLabAdapter
     public function getTokenGenerationUrl()
     {
         return sprintf('%/profile/account', $this->configuration['repo_domain_url']);
+    }
+
+    protected static function getPagination(Response $response)
+    {
+        $header = $response->getHeader('Link');
+
+        if (empty($header)) {
+            return null;
+        }
+
+        $pagination = [];
+
+        foreach (explode(',', $header) as $link) {
+            preg_match('/<(.*)>; rel="(.*)"/i', trim($link, ','), $match);
+
+            if (3 === count($match)) {
+                $pagination[$match[2]] = $match[1];
+            }
+        }
+
+        return $pagination;
     }
 }

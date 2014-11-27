@@ -15,6 +15,7 @@ use Gitlab\Model;
 
 /**
  * @author Julien Bianchi <contact@jubianchi.fr>
+ * @author Sebastiaan Stok <s.stok@rollerscapes.net>
  */
 class MergeRequest extends Model\MergeRequest
 {
@@ -31,7 +32,35 @@ class MergeRequest extends Model\MergeRequest
 
     public function toArray()
     {
-        $mr = array();
+        $mr = [
+            'url' => null,
+            'number' => null,
+            'state' => null,
+            'title' => null,
+            'body' => null,
+            'labels' => [],
+            'milestone' => null,
+            'created_at' => new \DateTime(),
+            'updated_at' => null,
+            'user' => null,
+            'assignee' => null,
+            'merge_commit' => null,
+            'merged' => false,
+            'merged_by' => null,
+            'head' => [
+                'ref' => null,
+                'sha' => null,
+                'user' => null,
+                'repo' => null,
+            ],
+            'base' => [
+              'ref' => null,
+              'label' => null,
+              'sha' => null,
+              'repo' => null,
+              'user' => null,
+            ],
+        ];
 
         foreach (static::$_properties as $property) {
             switch ($property) {
@@ -40,63 +69,66 @@ class MergeRequest extends Model\MergeRequest
                     break;
 
                 case 'author':
-                    if (false === isset($mr['head'])) {
-                        $mr['head'] = [];
+                    $mr['author'] = $this->{$property}->username;
+                    break;
+
+                case 'source_project_id':
+                    if ($this->project->id === $this->$property) {
+                        $sourceProject = $this->project;
+                    } else {
+                        $sourceProject = Model\Project::fromArray(
+                            $this->getClient(),
+                            $this->getClient()->api('projects')->show($this->$property)
+                        );
                     }
 
-                    $mr['head']['user'] = $this->$property->username;
+                    $mr['head']['user'] = $sourceProject->namespace->path;
+                    $mr['head']['repo'] = $sourceProject->name;
                     break;
 
                 case 'state':
-                    $mr['state'] = $this->$property;
+                    $mr['state'] = 'opened' === $this->$property ? 'open' : $this->$property;
                     $mr['merged'] = $this->$property === 'merged';
-
-                    if ($mr['merged']) {
-                        $mr['message'] = 'Merged ' . $this->title . ' into ' . $this->target_branch;
-                    }
                     break;
 
                 case 'source_branch':
-                    if (false === isset($mr['head'])) {
-                        $mr['head'] = [];
-                    }
-
                     $mr['head']['ref'] = $this->$property;
                     break;
 
-                case 'target_branch':
-                    $mr['base'] = array('label' => $this->$property, 'ref' => $this->$property);
+                case 'target_project_id':
+                    if ($this->project->id === $this->$property) {
+                        $targetProject = $this->project;
+                    } else {
+                        $targetProject = Model\Project::fromArray(
+                            $this->getClient(),
+                            $this->getClient()->api('projects')->show($this->$property)
+                        );
+                    }
+
+                    $mr['base']['user'] = $targetProject->namespace->path;
+                    $mr['base']['repo'] = $targetProject->name;
                     break;
 
-				case 'description':
+                case 'target_branch':
+                    $mr['base']['ref'] = $this->$property;
+                    break;
+
+                case 'created_at':
+                case 'updated_at':
+                    // remove microseconds precision (2014-11-28T08:43:59.354Z -> 2014-11-28T08:43:59Z)
+                    $mr[$property] = new \DateTime(preg_replace('{\.\d+}', '', $this->$property));
+                    break;
+
+                case 'description':
 					$mr['body'] = $this->$property;
 					break;
 
                 default:
-                    $mr[$property] = $this->$property;
+					$mr[$property] = $this->$property;
+					break;
             }
         }
 
-        return array_replace_recursive(
-            [
-                'merged' => false,
-                'url' => null,
-                'created_at' => new \DateTime(),
-                'updated_at' => new \DateTime(),
-                'message' => null,
-                'body' => null,
-                'label' => null,
-                'sha' => null,
-                'base' => array(
-                    'label' => null,
-                    'ref' => null
-                ),
-                'head' => array(
-                    'user' => null,
-                    'ref' => null,
-                )
-            ],
-            $mr
-        );
+        return $mr;
     }
 }

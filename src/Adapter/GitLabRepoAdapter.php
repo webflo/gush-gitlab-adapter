@@ -11,16 +11,17 @@
 
 namespace Gush\Adapter;
 
-use Gitlab\Client;
 use Gitlab\Model;
 use Gush\Exception;
 use Gush\Model\Issue;
 use Gush\Model\MergeRequest;
+use Gush\Model\Project;
 
 /**
  * @author Luis Cordova <cordoval@gmail.com>
  * @author Aaron Scherer <aequasi@gmail.com>
  * @author Julien Bianchi <contact@jubianchi.fr>
+ * @author Sebastiaan Stok <s.stok@rollerscapes.net>
  */
 class GitLabRepoAdapter extends BaseAdapter
 {
@@ -37,6 +38,13 @@ class GitLabRepoAdapter extends BaseAdapter
     public function createFork($org)
     {
         throw new Exception\UnsuportedOperationException('Forking is not supported by Gitlab');
+    }
+
+    public function getRepositoryInfo($org, $repository)
+    {
+        return Project::castFrom(
+            $this->findProject($org, $repository)
+        )->toArray();
     }
 
     public function getPullRequestUrl($id)
@@ -151,7 +159,24 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function getPullRequest($id)
     {
-        return MergeRequest::fromArray($this->client, $this->getCurrentProject(), $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id))->toArray();
+        $mr = MergeRequest::fromArray(
+            $this->client,
+            $this->getCurrentProject(),
+            $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id)
+        );
+
+        return array_merge(
+            $mr->toArray(),
+            [
+                'url' => sprintf(
+                    '%s/%s/%s/merge_requests/%d',
+                    $this->configuration['repo_domain_url'],
+                    $this->getUsername(),
+                    $this->getRepository(),
+                    $mr->iid
+                )
+            ]
+        );
     }
 
     /**
