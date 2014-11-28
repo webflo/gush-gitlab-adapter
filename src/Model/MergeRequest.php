@@ -54,11 +54,11 @@ class MergeRequest extends Model\MergeRequest
                 'repo' => null,
             ],
             'base' => [
-              'ref' => null,
-              'label' => null,
-              'sha' => null,
-              'repo' => null,
-              'user' => null,
+                'ref' => null,
+                'label' => null,
+                'sha' => null,
+                'repo' => null,
+                'user' => null,
             ],
         ];
 
@@ -120,12 +120,12 @@ class MergeRequest extends Model\MergeRequest
                     break;
 
                 case 'description':
-					$mr['body'] = $this->$property;
-					break;
+                    $mr['body'] = $this->$property;
+                    break;
 
                 default:
-					$mr[$property] = $this->$property;
-					break;
+                    $mr[$property] = $this->$property;
+                    break;
             }
         }
 
