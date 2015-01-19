@@ -85,6 +85,9 @@ class GitLabIssueTracker extends BaseIssueTracker
 
         return array_map(
             function ($issue) {
+                if (isset($issue['milestone']['title'])) {
+                    $issue['milestone'] = $issue['milestone']['title'];
+                }
                 return Issue::fromArray($this->client, $this->getCurrentProject(), $issue)->toArray();
             },
             $issues
