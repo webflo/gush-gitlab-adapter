@@ -22,7 +22,7 @@ class Issue extends Model\Issue
     {
         $cast = new static($issue->project, $issue->id, $issue->getClient());
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             $cast->$property = $issue->$property;
         }
 
@@ -33,7 +33,7 @@ class Issue extends Model\Issue
     {
         $issue = array();
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             switch ($property) {
                 case 'id':
                     $issue['number'] = $this->$property;
