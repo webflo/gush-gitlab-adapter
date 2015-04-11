@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * This file is part of Gush.
  *
  * (c) Luis Cordova <cordoval@gmail.com>
@@ -11,8 +11,8 @@
 
 namespace Gush\Adapter;
 
-use Gitlab\Model;
 use Gush\Exception;
+use Gush\Exception\UnsupportedOperationException;
 use Gush\Model\Issue;
 use Gush\Model\MergeRequest;
 use Gush\Model\Project;
@@ -37,7 +37,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function createFork($org)
     {
-        throw new Exception\UnsuportedOperationException('Forking is not supported by Gitlab');
+        throw new UnsupportedOperationException('Forking is not supported by Gitlab');
     }
 
     public function getRepositoryInfo($org, $repository)
@@ -68,6 +68,7 @@ class GitLabRepoAdapter extends BaseAdapter
             $this->getCurrentProject(),
             $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id)
         );
+
         $comment = $issue->addComment($message);
 
         return sprintf('%s#note_%d', $this->getPullRequestUrl($id), $comment->id);
@@ -92,7 +93,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function getLabels()
     {
-        throw new Exception\UnsuportedOperationException('Labels are not supported by Gitlab');
+        throw new UnsupportedOperationException('Labels are not supported by Gitlab');
     }
 
     /**
@@ -114,12 +115,12 @@ class GitLabRepoAdapter extends BaseAdapter
         if (isset($parameters['assignee'])) {
             $assignee = $this->client->api('users')->search($parameters['assignee']);
 
-            if (sizeof($assignee) === 0) {
+            if (count($assignee) === 0) {
                 throw new \InvalidArgumentException(sprintf('Could not find user %s', $parameters['assignee']));
             }
 
             $issue->update([
-                'assignee_id' => current($assignee)['id']
+                'assignee_id' => current($assignee)['id'],
             ]);
         }
     }
@@ -129,7 +130,11 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function closePullRequest($id)
     {
-        $mr = MergeRequest::fromArray($this->client, $this->getCurrentProject(), $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id));
+        $mr = MergeRequest::fromArray(
+            $this->client,
+            $this->getCurrentProject(),
+            $this->client->api('merge_requests')->show($this->getCurrentProject()->id, $id)
+        );
 
         return $mr->close()->id;
     }
@@ -150,7 +155,7 @@ class GitLabRepoAdapter extends BaseAdapter
 
         return array(
             'html_url' => $this->getPullRequestUrl($mr->id),
-            'number' => $mr->iid
+            'number' => $mr->iid,
         );
     }
 
@@ -174,7 +179,7 @@ class GitLabRepoAdapter extends BaseAdapter
                     $this->getUsername(),
                     $this->getRepository(),
                     $mr->iid
-                )
+                ),
             ]
         );
     }
@@ -205,7 +210,12 @@ class GitLabRepoAdapter extends BaseAdapter
         $mergeRequests = $this->client->api('merge_requests')->all($this->getCurrentProject()->id);
 
         if (null !== $state) {
-            $mergeRequests = array_filter($mergeRequests, function ($mr) use ($state) { return $mr['state'] === $state; });
+            $mergeRequests = array_filter(
+                $mergeRequests,
+                function ($mr) use ($state) {
+                    return $mr['state'] === $state;
+                }
+            );
         }
 
         return array_map(
@@ -229,7 +239,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function createRelease($name, array $parameters = [])
     {
-        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
+        throw new UnsupportedOperationException('Releases are not supported by Gitlab.');
     }
 
     /**
@@ -237,7 +247,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function getReleases()
     {
-        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
+        throw new UnsupportedOperationException('Releases are not supported by Gitlab.');
     }
 
     /**
@@ -245,7 +255,7 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function removeRelease($id)
     {
-        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
+        throw new UnsupportedOperationException('Releases are not supported by Gitlab.');
     }
 
     /**
@@ -253,6 +263,6 @@ class GitLabRepoAdapter extends BaseAdapter
      */
     public function createReleaseAssets($id, $name, $contentType, $content)
     {
-        throw new Exception\UnsuportedOperationException('Releases are not supported by Gitlab');
+        throw new UnsupportedOperationException('Releases are not supported by Gitlab.');
     }
 }

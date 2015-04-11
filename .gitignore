@@ -1,6 +1,4 @@
 /vendor/
 /composer.lock
-/vendor
 /phpunit.xml
-/build
 /.vagrant/
