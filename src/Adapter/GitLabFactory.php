@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * This file is part of Gush.
  *
  * (c) Luis Cordova <cordoval@gmail.com>
@@ -83,14 +83,14 @@ class GitLabFactory
     }
 
     /**
-	 * @param string $url
-	 *
+     * @param string $url
+     *
      * @return Client
      */
     protected static function getGitlabClient($url)
     {
         if (null === static::$client || static::$client->getBaseUrl() !== $url) {
-            static::$client = new Client(trim($url, '/') . '/');
+            static::$client = new Client(trim($url, '/').'/');
         }
 
         return static::$client;

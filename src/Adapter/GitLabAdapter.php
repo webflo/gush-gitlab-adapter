@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * This file is part of Gush.
  *
  * (c) Luis Cordova <cordoval@gmail.com>
@@ -14,25 +14,25 @@ namespace Gush\Adapter;
 use Buzz\Message\Response;
 use Gitlab\Client;
 use Gitlab\Model;
-use Gush\Exception;
+use Gush\Exception\AdapterException;
 
 /**
  * @author Julien Bianchi <contact@jubianchi.fr>
  */
 trait GitLabAdapter
 {
-	/**
-	 * @var Client|null
-	 */
-	protected $client;
+    /**
+     * @var Client|null
+     */
+    protected $client;
 
-	/**
-	 * {@inheritdoc}
-	 */
-	public function __construct(array $configuration)
-	{
-		$this->configuration = $configuration;
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function __construct(array $configuration)
+    {
+        $this->configuration = $configuration;
+    }
 
     /**
      * @param Client $client
@@ -46,7 +46,7 @@ trait GitLabAdapter
         return $this;
     }
 
-	/**
+    /**
      * @throws \RuntimeException
      *
      * @return Model\Project
@@ -115,10 +115,13 @@ trait GitLabAdapter
     public function authenticate()
     {
         if (Configurator::AUTH_HTTP_TOKEN !== $this->configuration['authentication']['http-auth-type']) {
-            throw new \Exception("Authentication type for GitLab must be Token");
+            throw new AdapterException('Authentication type for GitLab must be Token.');
         }
 
-        $this->client->authenticate($this->configuration['authentication']['password-or-token'], Client::AUTH_HTTP_TOKEN);
+        $this->client->authenticate(
+            $this->configuration['authentication']['password-or-token'],
+            Client::AUTH_HTTP_TOKEN
+        );
 
         return true;
     }
@@ -131,9 +134,9 @@ trait GitLabAdapter
         return is_array($this->client->api('projects')->owned());
     }
 
-	/**
-	 * {@inheritdoc}
-	 */
+    /**
+     * {@inheritdoc}
+     */
     public function getTokenGenerationUrl()
     {
         return sprintf('%/profile/account', $this->configuration['repo_domain_url']);
@@ -144,7 +147,7 @@ trait GitLabAdapter
         $header = $response->getHeader('Link');
 
         if (empty($header)) {
-            return null;
+            return;
         }
 
         $pagination = [];

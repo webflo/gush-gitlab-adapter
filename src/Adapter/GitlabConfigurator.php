@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * This file is part of Gush.
  *
  * (c) Luis Cordova <cordoval@gmail.com>
@@ -9,6 +10,7 @@
  */
 
 namespace Gush\Adapter;
+
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -17,13 +19,13 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class GitlabConfigurator extends DefaultConfigurator
 {
-	public function interact(InputInterface $input, OutputInterface $output)
-	{
-		$config = parent::interact($input, $output);
+    public function interact(InputInterface $input, OutputInterface $output)
+    {
+        $config = parent::interact($input, $output);
 
-		$config['base_url'] = rtrim($config['base_url'], '/');
-		$config['repo_domain_url'] = rtrim($config['repo_domain_url'], '/');
+        $config['base_url'] = rtrim($config['base_url'], '/');
+        $config['repo_domain_url'] = rtrim($config['repo_domain_url'], '/');
 
-		return $config;
-	}
-} 
+        return $config;
+    }
+}

@@ -1,6 +1,6 @@
 <?php
 
-/**
+/*
  * This file is part of Gush.
  *
  * (c) Luis Cordova <cordoval@gmail.com>
@@ -12,8 +12,8 @@
 namespace Gush\Adapter;
 
 use Gitlab\Client;
-use Gitlab\Model;
 use Gush\Exception;
+use Gush\Exception\UnsupportedOperationException;
 use Gush\Model\Issue;
 
 /**
@@ -33,7 +33,7 @@ class GitLabIssueTracker extends BaseIssueTracker
         $issue = $this->getCurrentProject()->createIssue(
             $subject,
             [
-                'description' => $body
+                'description' => $body,
             ]
         );
 
@@ -45,7 +45,11 @@ class GitLabIssueTracker extends BaseIssueTracker
      */
     public function getIssue($id)
     {
-        return Issue::fromArray($this->client, $this->getCurrentProject(), $this->client->api('issues')->show($this->getCurrentProject()->id, $id))->toArray();
+        return Issue::fromArray(
+            $this->client,
+            $this->getCurrentProject(),
+            $this->client->api('issues')->show($this->getCurrentProject()->id, $id)
+        )->toArray();
     }
 
     /**
@@ -72,15 +76,30 @@ class GitLabIssueTracker extends BaseIssueTracker
         if (isset($parameters['state'])) {
             $parameters['state'] = $parameters['state'] === 'open' ? 'opened' : 'closed';
 
-            $issues = array_filter($issues, function ($issue) use ($parameters) { return $issue['state'] === $parameters['state']; });
+            $issues = array_filter(
+                $issues,
+                function ($issue) use ($parameters) {
+                    return $issue['state'] === $parameters['state'];
+                }
+            );
         }
 
         if (isset($parameters['creator'])) {
-            $issues = array_filter($issues, function ($issue) use ($parameters) { return $issue['user']['login'] === $parameters['creator']; });
+            $issues = array_filter(
+                $issues,
+                function ($issue) use ($parameters) {
+                    return $issue['user']['login'] === $parameters['creator'];
+                }
+            );
         }
 
         if (isset($parameters['assignee'])) {
-            $issues = array_filter($issues, function ($issue) use ($parameters) { return $issue['assignee']['login'] === $parameters['assignee']; });
+            $issues = array_filter(
+                $issues,
+                function ($issue) use ($parameters) {
+                    return $issue['assignee']['login'] === $parameters['assignee'];
+                }
+            );
         }
 
         return array_map(
@@ -88,6 +107,7 @@ class GitLabIssueTracker extends BaseIssueTracker
                 if (isset($issue['milestone']['title'])) {
                     $issue['milestone'] = $issue['milestone']['title'];
                 }
+
                 return Issue::fromArray($this->client, $this->getCurrentProject(), $issue)->toArray();
             },
             $issues
@@ -105,12 +125,12 @@ class GitLabIssueTracker extends BaseIssueTracker
         if (isset($parameters['assignee'])) {
             $assignee = $this->client->api('users')->search($parameters['assignee']);
 
-            if (sizeof($assignee) === 0) {
+            if (count($assignee) === 0) {
                 throw new \InvalidArgumentException(sprintf('Could not find user %s', $parameters['assignee']));
             }
 
             $issue->update([
-                'assignee_id' => current($assignee)['id']
+                'assignee_id' => current($assignee)['id'],
             ]);
         }
     }
@@ -121,7 +141,8 @@ class GitLabIssueTracker extends BaseIssueTracker
     public function closeIssue($id)
     {
         $issue = $this->client->api('issues')->show($this->getCurrentProject()->id, $id);
-        $issue = Issue::fromArray($this->client, $this->getCurrentProject(), $issue);
+
+        Issue::fromArray($this->client, $this->getCurrentProject(), $issue);
     }
 
     /**
@@ -134,6 +155,7 @@ class GitLabIssueTracker extends BaseIssueTracker
             $this->getCurrentProject(),
             $this->client->api('issues')->show($this->getCurrentProject()->id, $id)
         );
+
         $comment = $issue->addComment($message);
 
         return sprintf('%s#note_%d', $this->getIssueUrl($id), $comment->id);
@@ -158,7 +180,7 @@ class GitLabIssueTracker extends BaseIssueTracker
      */
     public function getLabels()
     {
-        throw new Exception\UnsuportedOperationException('Labels are not supported by Gitlab');
+        throw new UnsupportedOperationException('Labels are not supported by Gitlab');
     }
 
     /**
