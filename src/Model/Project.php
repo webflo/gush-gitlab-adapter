@@ -22,7 +22,7 @@ class Project extends Model\Project
     {
         $cast = new static($project->id, $project->getClient());
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             $cast->$property = $project->$property;
         }
 
@@ -41,7 +41,7 @@ class Project extends Model\Project
             'fork_origin' => null,
         ];
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             switch ($property) {
                 case 'owner':
                     $project['owner'] = $this->{$property}->username;
