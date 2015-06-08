@@ -22,7 +22,7 @@ class User extends Model\User
     {
         $cast = new static($user->id, $user->getClient());
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             $cast->$property = $user->$property;
         }
 
@@ -33,7 +33,7 @@ class User extends Model\User
     {
         $user = [];
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             switch ($property) {
                 case 'username':
                     $user['login'] = $this->$property;

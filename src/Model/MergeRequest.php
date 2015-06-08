@@ -23,7 +23,7 @@ class MergeRequest extends Model\MergeRequest
     {
         $cast = new static($mr->project, $mr->id, $mr->getClient());
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             $cast->$property = $mr->$property;
         }
 
@@ -62,7 +62,7 @@ class MergeRequest extends Model\MergeRequest
             ],
         ];
 
-        foreach (static::$_properties as $property) {
+        foreach (static::$properties as $property) {
             switch ($property) {
                 case 'id':
                     $mr['number'] = $this->$property;
