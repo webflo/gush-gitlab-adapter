@@ -44,7 +44,7 @@ class Project extends Model\Project
         foreach (static::$properties as $property) {
             switch ($property) {
                 case 'owner':
-                    $project['owner'] = $this->{$property}->username;
+                    $project['owner'] = $this->namespace->path;
                     break;
 
                 case 'web_url':
