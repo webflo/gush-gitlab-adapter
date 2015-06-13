@@ -74,37 +74,8 @@ trait GitLabAdapter
 
     protected function findProject($namespace, $projectName)
     {
-        $projects = $this->client->api('projects')->accessible(1, 100);
-        $currentModel = null;
-
-        // loop until we find a matching project or run-out of pages
-        while (true) {
-            foreach ($projects as $project) {
-                if ($project['path_with_namespace'] === $namespace.'/'.$projectName) {
-                    $currentModel = Model\Project::fromArray($this->client, $project);
-
-                    break 2;
-                }
-            }
-
-            $paginating = $this->getPagination($this->client->getHttpClient()->getLastResponse());
-
-            if (!isset($paginating['next'])) {
-                break;
-            }
-
-            $projects = $this->client->getHttpClient()->get(
-                substr($paginating['next'], strlen($this->configuration['base_url']))
-            )->getContent();
-        }
-
-        if (!$currentModel) {
-            throw new \RuntimeException(
-                sprintf('Could not find gitlab project id with %s/%s', $namespace, $projectName)
-            );
-        }
-
-        return $currentModel;
+        $project = $this->client->api('projects')->show($namespace . '/'. $projectName);
+        return Model\Project::fromArray($this->client, $project);
     }
 
     /**
