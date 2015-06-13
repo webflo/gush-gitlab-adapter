@@ -20,13 +20,7 @@ class Project extends Model\Project
 {
     public static function castFrom(Model\Project $project)
     {
-        $cast = new static($project->id, $project->getClient());
-
-        foreach (static::$properties as $property) {
-            $cast->$property = $project->$property;
-        }
-
-        return $cast;
+        return static::fromArray($project->getClient(), $project->getData());
     }
 
     public function toArray()
