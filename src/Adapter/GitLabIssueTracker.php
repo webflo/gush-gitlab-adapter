@@ -12,7 +12,6 @@
 namespace Gush\Adapter;
 
 use Gitlab\Client;
-use Gush\Exception;
 use Gush\Exception\UnsupportedOperationException;
 use Gush\Model\Issue;
 
