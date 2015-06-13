@@ -74,8 +74,7 @@ trait GitLabAdapter
 
     protected function findProject($namespace, $projectName)
     {
-        $project = $this->client->api('projects')->show($namespace . '/'. $projectName);
-        return Model\Project::fromArray($this->client, $project);
+        return Model\Project::fromArray($this->client, $this->client->api('projects')->show($namespace.'/'.$projectName));
     }
 
     /**

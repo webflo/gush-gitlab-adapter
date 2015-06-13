@@ -11,7 +11,6 @@
 
 namespace Gush\Adapter;
 
-use Gush\Exception;
 use Gush\Exception\UnsupportedOperationException;
 use Gush\Model\Issue;
 use Gush\Model\MergeRequest;
