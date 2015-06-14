@@ -28,4 +28,19 @@ class GitlabConfigurator extends DefaultConfigurator
 
         return $config;
     }
+
+
+  /**
+   * Get the unique name of a configured adapter.
+   *
+   * @return string
+   */
+    public function getAdapterName($config) {
+        if (empty($config['base_url'])) {
+            throw new \Exception('Invalid base_url configuration.');
+        }
+
+        $url = parse_url($config['base_url']);
+        return $this->getBaseAdapterName() . ':' . $url['host'];
+    }
 }
